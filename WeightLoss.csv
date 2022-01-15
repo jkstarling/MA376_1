@@ -1,0 +1,181 @@
+id,diet,exercise,wloss
+1,Vegetarian,60 min,13.96
+2,None,30 min,-2.12
+3,None,60 min,6.92
+4,Keto,30 min,0.68
+5,Vegetarian,60 min,4.68
+6,None,30 min,0.36
+7,None,None,3.72
+8,None,30 min,8.92
+9,None,30 min,4.92
+10,None,None,-0.84
+11,Keto,60 min,6.44
+12,Keto,60 min,8.2
+13,Keto,None,5.96
+14,None,60 min,7.88
+15,Vegetarian,60 min,11.24
+16,Vegetarian,60 min,10.04
+17,Keto,30 min,1.64
+18,None,30 min,-3
+19,None,None,1.32
+20,None,None,-2.12
+21,None,60 min,5.24
+22,Keto,30 min,4.2
+23,None,None,0.2
+24,None,30 min,1
+25,Vegetarian,30 min,2.2
+26,Vegetarian,None,7.8
+27,None,None,0.36
+28,Vegetarian,None,-2.2
+29,Vegetarian,None,8.52
+30,None,None,0.04
+31,None,None,-1.4
+32,Keto,60 min,5.56
+33,Keto,30 min,2.68
+34,Keto,60 min,5.56
+35,None,60 min,8.04
+36,Keto,60 min,11.48
+37,None,None,-6.44
+38,Keto,30 min,-0.68
+39,None,30 min,0.68
+40,Keto,None,0.04
+41,None,30 min,0.44
+42,Vegetarian,60 min,13.56
+43,Vegetarian,60 min,12.28
+44,Vegetarian,30 min,3.64
+45,Vegetarian,60 min,9.64
+46,Keto,60 min,8.76
+47,None,30 min,5.48
+48,None,60 min,7
+49,None,30 min,0.52
+50,Vegetarian,30 min,7
+51,None,60 min,7.24
+52,Keto,60 min,10.68
+53,Keto,None,-0.36
+54,Keto,None,5.16
+55,Vegetarian,None,9.48
+56,None,30 min,0.52
+57,None,None,2.2
+58,None,30 min,-3
+59,None,30 min,2.04
+60,None,60 min,9.64
+61,Keto,30 min,-3.56
+62,Vegetarian,60 min,11.48
+63,Keto,None,1.8
+64,None,60 min,12.92
+65,None,60 min,7.32
+66,None,60 min,6.12
+67,Vegetarian,30 min,5.24
+68,Vegetarian,60 min,12.12
+69,Keto,30 min,7.48
+70,Vegetarian,None,5.56
+71,None,None,2.12
+72,None,None,1.16
+73,None,60 min,5.4
+74,Vegetarian,30 min,5.8
+75,Vegetarian,None,2.6
+76,Vegetarian,None,5.88
+77,Keto,None,1.48
+78,Keto,None,-0.6
+79,Vegetarian,None,4.28
+80,Keto,None,2.6
+81,None,60 min,2.44
+82,None,None,0.68
+83,Keto,60 min,6.2
+84,Keto,30 min,0.36
+85,Keto,60 min,10.52
+86,None,60 min,4.76
+87,Keto,30 min,-0.36
+88,Vegetarian,30 min,7.64
+89,None,30 min,3.24
+90,Keto,None,4.36
+91,Vegetarian,60 min,5.16
+92,Keto,30 min,5.88
+93,Keto,60 min,6.44
+94,Keto,60 min,4.6
+95,Keto,None,0.12
+96,Vegetarian,60 min,13.16
+97,Vegetarian,30 min,3.4
+98,None,30 min,4.36
+99,Keto,None,5.72
+100,None,None,4.12
+101,None,60 min,8.76
+102,Vegetarian,30 min,5.88
+103,Keto,None,5.24
+104,Vegetarian,30 min,5.4
+105,Keto,None,1.72
+106,Keto,30 min,1.24
+107,Vegetarian,30 min,6.04
+108,Keto,30 min,-2.12
+109,Keto,None,-0.76
+110,Vegetarian,None,4.6
+111,Keto,30 min,-1.56
+112,Keto,60 min,11.24
+113,Keto,30 min,3.4
+114,None,30 min,1.72
+115,None,None,0.68
+116,None,60 min,6.36
+117,Vegetarian,None,5
+118,Vegetarian,60 min,7.32
+119,None,60 min,5.96
+120,Vegetarian,30 min,3.48
+121,Keto,60 min,7
+122,Vegetarian,None,2.92
+123,Vegetarian,60 min,9.88
+124,Vegetarian,60 min,7.16
+125,Keto,30 min,5.08
+126,Vegetarian,None,5.16
+127,Keto,None,9.64
+128,None,None,-4.28
+129,Keto,30 min,-5.96
+130,None,60 min,6.28
+131,Vegetarian,30 min,3.32
+132,Vegetarian,60 min,14.36
+133,Vegetarian,60 min,7.32
+134,Keto,60 min,12.2
+135,Keto,30 min,3
+136,None,30 min,2.6
+137,Vegetarian,30 min,-1.16
+138,None,None,-4.44
+139,None,None,-0.12
+140,Keto,30 min,1.24
+141,Vegetarian,30 min,7.32
+142,Vegetarian,60 min,5.24
+143,Vegetarian,30 min,7.56
+144,None,30 min,-0.2
+145,Keto,60 min,14.12
+146,Vegetarian,None,4.2
+147,Keto,None,1.72
+148,Vegetarian,60 min,14.28
+149,Keto,30 min,2.04
+150,Keto,None,3.48
+151,Keto,60 min,4.68
+152,None,60 min,9.8
+153,Keto,None,-0.28
+154,Keto,60 min,9
+155,None,30 min,0.68
+156,None,None,2.2
+157,Vegetarian,30 min,0.28
+158,Vegetarian,None,1.64
+159,Vegetarian,None,5.56
+160,Vegetarian,60 min,7.4
+161,Vegetarian,None,-0.44
+162,Keto,60 min,8.44
+163,None,60 min,3.24
+164,None,30 min,-2.52
+165,Vegetarian,30 min,7.8
+166,None,None,2.84
+167,Vegetarian,None,5.24
+168,Vegetarian,30 min,3.16
+169,Keto,60 min,9.24
+170,Vegetarian,None,2.6
+171,Keto,30 min,9.56
+172,Vegetarian,60 min,7.48
+173,Vegetarian,30 min,6.2
+174,Vegetarian,None,3.08
+175,Keto,None,1.08
+176,None,60 min,10.52
+177,Vegetarian,30 min,4.12
+178,Keto,60 min,14.76
+179,Keto,None,1.16
+180,Vegetarian,None,5.08

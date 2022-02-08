@@ -1,0 +1,7 @@
+VitC	Brand	Temp
+2.38	GreatValue	Refrigerator
+2.32	GreatValue	Room
+2.34	Meijer	Refrigerator
+1.86	Meijer	Room
+2.01	MinuteMaid	Refrigerator
+2.01	MinuteMaid	Room

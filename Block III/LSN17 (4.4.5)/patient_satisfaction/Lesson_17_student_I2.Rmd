@@ -1,0 +1,229 @@
+---
+title: "Lesson 17 - Patient Satisfaction Surveys"
+author: "LTC J. K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+<br>
+
+```{r echo=FALSE, include=FALSE}
+# Load packages
+library(tidyverse)
+library(ggResidpanel)
+library(car)
+```
+#### Background
+
+The U.S. healthcare system increasingly uses patient satisfaction scores in payment models and quality assessment. Researchers continue to explore different variables and whether they explain variation in patient satisfaction scores. For example, Tyser, Gaffney, Zhang, and Presson (2018) explored “the association of patient satisfaction with pain, anxiety, and selfreported physical function” (Journal Bone Joint Surgery of America, 1811–1818). In this exploration you will analyze an example data set that includes measures of patient satisfaction, anxiety level, severity of illness, and age (found in Kutner, Nachtsheim, and Neter, 2004).
+
+**Ask a research question.** 
+\vspace{0.5in}
+
+
+
+```{r}
+### Read data
+# survey <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/patientSatisfaction.txt', header = TRUE, stringsAsFactors = TRUE)
+
+setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN17/")
+survey <- read.table('patientSatisfaction.txt', header = TRUE,
+                     stringsAsFactors = TRUE)
+```
+
+The data set consists of 46 patients at a certain hospital who completed a satisfaction survey upon release from the hospital. The data in PatientSatisfaction assess satisfaction on a (0–100) scale (with larger values indicating higher satisfaction), anxiety (measured as a quantitative variable with higher numbers indicating more anxiety), and age. Age is reported both as a quantitative variable and as a categorical variable (age group: younger = 20–34, middle = 35–49, older = 50–64). We will first focus on the categorical age group variable.
+
+#### Single (explanatory) variable model
+
+(@) Let's start with the relationship between satisfaction and anxiety (score). 
+- What are the hypotheses?
+\vspace{0.5in}
+
+
+
+```{r}
+# Q1 - Sydney
+anxiety.lm <- lm(data=survey, satisfaction~anxiety)
+summary(anxiety.lm)
+anova(anxiety.lm)
+```
+
+- What are the conclusions? Interpret coefficient of determination.
+\vspace{0.5in}
+
+
+(@) We can also look at the relationship between age group and satisfaction.
+- What are the hypotheses?
+\vspace{0.5in}
+
+```{r}
+#Q2 - Aaron
+age.lm <- survey %>% lm(satisfaction ~ AgeGroup, data =.)
+summary(age.lm)
+anova(age.lm)
+```
+- How do we interpret the coefficients? 
+\vspace{0.5in}
+
+
+- Interpret coefficient of determination. 
+\vspace{0.5in}
+
+#### Two-variable model
+(@) Maybe we should use a model with both explanatory variables (anxiety and AgeGroup) to explain customer satisfaction.  Create two models `both.lm` and `both.lm2` for indicator coding and effect coding, respectively. 
+
+- What are the hypotheses? 
+\vspace{0.5in}
+
+```{r}
+# Q3 - Josh 
+both.lm <- survey %>% lm(satisfaction~anxiety+AgeGroup,data=.)
+summary(both.lm)
+
+survey2 <- survey
+contrasts(survey2$AgeGroup) = contr.sum
+both.lm2 <- survey2 %>% lm(satisfaction~anxiety+AgeGroup,data=.)
+summary(both.lm2)
+```
+
+- What are the conclusions? Interpret the coefficients. 
+\vspace{0.5in}
+
+
+- Interpret coefficient of determination and compare to $R^2$ of the first two models. 
+\vspace{0.5in}
+
+
+
+### Comparing Models
+Certainly our $\small R^2$ increased, but if we know anxiety do we gain anything by knowing age group? That is, we want to do a single test that evaluates whether the variable age group (the collection of indicator terms) is significant or not. Note that when we have multiple categories, if we test each category separately we are inflating the Type I error.  For this we go to the ANOVA:
+
+```{r message=FALSE, warning=FALSE}
+Anova(both.lm2, type = 3)
+```
+
+(@) The final question we want to ask is whether this model is better than the model with only anxiety. (How is this different to the overall F stat information we get from each model?)
+
+- Since we have \textbf{nested models} we can statistically compare the two models. What do I mean by nested models? The *smaller model* has removed some coefficients from the larger model. Assuming our validity conditions are met, we can form the F statistic on page 354 and conduct a partial F test to compare two nested models. What are the hypotheses for the partial F test? 
+\vspace{0.5in}
+
+
+
+
+```{r}
+partF <- ((0.6551-0.4155)/2) / ((1-0.6551)/42); partF
+anova(anxiety.lm, both.lm)
+```
+
+- Note: for the partial F test we aren't concerned with types of Sums of Squares as we are, by default, conducting a conditional test. 
+
+- What is our conclusion about which model is better?  
+\vspace{0.5in}
+
+
+
+- Lets look what the indicator and effect coding models look like in a plot.  
+\vspace{0.5in}
+```{r}
+survey3 = survey %>%
+  mutate(fitted = predict(both.lm, newdata = .), 
+         residuals = satisfaction - fitted)
+
+survey3 %>%
+  ggplot(aes(x=anxiety, y=fitted, color=AgeGroup)) +
+  geom_line()  + 
+  geom_point(aes(y=satisfaction))
+
+survey4 = survey %>%
+  mutate(fitted = predict(both.lm2, newdata = .), 
+         residuals = satisfaction - fitted)
+
+survey4 %>%
+  ggplot(aes(x=anxiety, y=fitted, color=AgeGroup)) +
+  geom_line() + 
+  geom_point(aes(y=satisfaction))
+```
+
+Note: our model for all three groups have the same slope.  
+
+#### Interactions
+
+(@) How do we model the effect of anxiety changing across the age group categories?
+\vspace{0.5in}
+
+
+
+- What are the hypotheses?  
+\vspace{0.5in}
+
+
+
+
+We can then test if this model is preferred to a model without interactions by:
+
+```{r}
+inter.lm <-survey %>% lm(satisfaction~anxiety*AgeGroup, data=.)
+summary(inter.lm)
+inter.lm2 <-survey2 %>% lm(satisfaction~anxiety*AgeGroup, data = .)
+summary(inter.lm2)
+Anova(inter.lm2, type=3)
+anova(both.lm2, inter.lm2)
+```
+
+\vspace{0.5in}
+
+
+
+
+### Bonferonni corrections
+We can get 95\% CI for each of our $\beta$ terms in this model, though might we want to adjust these CIs using what is called Bonferonni Corrections so as not to inflate Type I error. This technique uses $\alpha/k$ in lieu of $\alpha$ where $k$ is the number of comparisons or tests being performed.  Here we have 3 Confidence intervals, so Bonferonni corrections would say to use $.05/3=.016$, or in order to guarantee an overall $\small \alpha=0.05$, we should use $\small 1-0.016=99.84\%$ CI instead of $\small 95\%$ CI.
+
+```{r}
+# confint(...)
+# confint(...,level=0.9984)
+```
+
+What can we conclude if we use this technique? Is it different to the unadjusted CI?
+\vspace{0.5in}
+
+
+(@) Now that we have a final model what should we check before we can trust our conclusions? 
+
+```{r fig.height=3, fig.width=5, message=FALSE, warning=FALSE}
+# Validity conditions
+resid_panel(both.lm, plots = c("hist", "resid"))
+resid_panel(inter.lm, plots = c("hist", "resid"))
+```
+
+
+```{r}
+
+survey5 = survey %>%
+  mutate(fitted = predict(inter.lm, newdata = .), 
+         residuals = satisfaction - fitted)
+
+survey5 %>%
+  ggplot(aes(x=anxiety, y=fitted, color=AgeGroup)) +
+  geom_line() + 
+  geom_point(aes(y=satisfaction))
+```
+
+\vspace{0.5in}
+
+#### References
+
+Nathan Tintle et al.(2019). Intermediate Statistical Investigations for U.S. Military Academy at West Point.

@@ -1,0 +1,806 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Lesson 22 Sleep and Nightmares (6.1)},
+  pdfauthor={LTC J. K. Starling},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Lesson 22 Sleep and Nightmares (6.1)}
+\author{LTC J. K. Starling}
+\date{}
+
+\begin{document}
+\maketitle
+
+\hypertarget{background}{%
+\paragraph{Background}\label{background}}
+
+In a 2003 study in the Journal of Sleep and Hypnosis, researchers were
+interested in whether the side a person slept on impacted the dreams
+that they experienced and if they had nightmares. Researchers selected
+participants who fell asleep and awoke on one side and who could
+remember their dreams. They found 63 participants, of whom 41 were
+right- side sleepers and 22 were left-side sleepers. The researchers
+would like to determine if a larger proportion of left side sleepers had
+nightmares than right side sleepers. The data set
+\texttt{nightmares.csv} contains the reported side a participant woke up
+on and whether or not they experienced a nightmare.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load packages}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\FunctionTok{library}\NormalTok{(table1)}
+ 
+\DocumentationTok{\#\#\# Data management}
+\NormalTok{nightmare }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"https://raw.githubusercontent.com/jkstarling/MA376/main/nightmares.csv"}\NormalTok{, }
+                      \AttributeTok{header=}\NormalTok{T, }
+                      \AttributeTok{stringsAsFactors =} \ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# setwd("C:/Users/james.starling/OneDrive {-} West Point/Teaching/MA376/JimsLessons\_AY23{-}1/Block III/LSN22 (6.1)/")}
+\CommentTok{\# nightmare \textless{}{-} read.csv("nightmares.csv", header = TRUE, stringsAsFactors = TRUE)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\tightlist
+\item
+  What are our hypotheses (in words)? What is our explanatory/response
+  variable? What type of data are we dealing with for the
+  explanatory/response variables?
+\end{enumerate}
+
+\textcolor{blue}{$H_0:$ The side you sleep on makes no difference in the probability of an individual having a nightmare or, there is no association between side slept on and whether or not the individual has a nightmare.}
+
+\textcolor{blue}{$H_a:$ The side you sleep on impacts the likelihood of having a nightmare, i.e., there is a difference in the probability of an individual having a nightmare based on the side they slept on.}
+
+\textcolor{blue}{explanatory: side person sleeps on (categorical); response: remembered nightmare (categorical/binary)}
+
+\vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  How are the types of data different than what we have dealt with
+  before? What is statistical model we will deal with now?
+\end{enumerate}
+
+\textcolor{blue}{explanatory: side person sleeps on (categorical); response: remembered nightmare (categorical)}
+
+\(Y_{ij} \sim \mbox{Bern}(\pi_i)\), \(i\) is the group/category, \(j\)
+is the observation.
+
+\vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  A common way to depict data for this sort of study is using a 2 x 2
+  contingency table.
+\end{enumerate}
+
+The order of the contingency table matters. Make sure you place the
+explanatory variable (groups) on the x-axis (columns) and the response
+variable (success/failure) on the y-axis.
+
+What is success in this case?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{T1 }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(nightmare}\SpecialCharTok{$}\NormalTok{Nightmare, nightmare}\SpecialCharTok{$}\NormalTok{Side)}
+\NormalTok{T1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      
+##        L  R
+##   No  11 31
+##   Yes 11 10
+\end{verbatim}
+
+\textcolor{blue}{We define success as having a nightmare in this instance.}
+\vspace{0.5in}
+
+\hypertarget{drawing-inferences-beyond-the-data}{%
+\paragraph{Drawing inferences beyond the
+data}\label{drawing-inferences-beyond-the-data}}
+
+We have several tests that we can use to draw inferences beyond the
+data.
+
+\hypertarget{choice-1-two-sample-z-test-difference-in-proportions}{%
+\paragraph{Choice 1: Two-sample z test (Difference in
+Proportions)}\label{choice-1-two-sample-z-test-difference-in-proportions}}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  What is the parameter of interest?
+\end{enumerate}
+
+\(\pi_{left}-\pi_{right}\) \vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{4}
+\tightlist
+\item
+  Write the hypotheses in symbols.
+\end{enumerate}
+
+\(H_0:\pi_{left}-\pi_{right} = 0\)
+
+\(H_a:\pi_{left}-\pi_{right} \neq 0\) \vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{5}
+\tightlist
+\item
+  What is the statistic? Calculate it here using the table above.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{phat\_left }\OtherTok{\textless{}{-}}\NormalTok{ T1[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{] }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(T1[,}\DecValTok{1}\NormalTok{])}
+\NormalTok{phat\_right }\OtherTok{\textless{}{-}}\NormalTok{ T1[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{] }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(T1[,}\DecValTok{2}\NormalTok{])}
+\NormalTok{phat\_dif }\OtherTok{\textless{}{-}}\NormalTok{ phat\_left}\SpecialCharTok{{-}}\NormalTok{phat\_right}
+\FunctionTok{c}\NormalTok{(phat\_left, phat\_right, phat\_dif)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.5000000 0.2439024 0.2560976
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{prop.table}\NormalTok{(T1,}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      
+##               L         R
+##   No  0.5000000 0.7560976
+##   Yes 0.5000000 0.2439024
+\end{verbatim}
+
+\textcolor{blue}{The difference in the conditional proportions. }
+\(\hat{p}_{left}-\hat{p}_{right}\)
+
+\vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{6}
+\tightlist
+\item
+  How rare is this under \(H_0\)? We can use our shuffling simulation
+  strategy to estimate:
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{376}\NormalTok{)}
+
+\NormalTok{M }\OtherTok{\textless{}{-}} \DecValTok{5000}
+\NormalTok{results }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{stat =} \FunctionTok{rep}\NormalTok{(}\ConstantTok{NA}\NormalTok{,M))}
+
+\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{M)\{}
+\NormalTok{  nm.mod }\OtherTok{\textless{}{-}}\NormalTok{ nightmare }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{shuff.cat =} \FunctionTok{sample}\NormalTok{(Side))}
+\NormalTok{  my.table }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(nm.mod}\SpecialCharTok{$}\NormalTok{Nightmare, nm.mod}\SpecialCharTok{$}\NormalTok{shuff.cat)}
+\NormalTok{  p.tabl }\OtherTok{\textless{}{-}} \FunctionTok{prop.table}\NormalTok{(my.table,}\DecValTok{2}\NormalTok{)}
+\NormalTok{  results}\SpecialCharTok{$}\NormalTok{stat[i] }\OtherTok{\textless{}{-}}\NormalTok{ p.tabl[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ p.tabl[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{]}
+\NormalTok{\}}
+
+\NormalTok{results }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{stat)) }\SpecialCharTok{+} \FunctionTok{geom\_histogram}\NormalTok{()}\SpecialCharTok{+}
+  \FunctionTok{geom\_vline}\NormalTok{(}\AttributeTok{xintercept =}\NormalTok{ phat\_dif, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{color =} \StringTok{"red"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Lesson_22_Nightmares_SOLN_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sum}\NormalTok{(results}\SpecialCharTok{$}\NormalTok{stat }\SpecialCharTok{\textgreater{}=}\NormalTok{ phat\_dif) }\SpecialCharTok{/}\NormalTok{ M}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.041
+\end{verbatim}
+
+\textbackslash textcolor\{blue\}\{It is rare. Only 3.36\% of the
+examples were more extreme. \}
+
+\vspace{0.25in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{7}
+\tightlist
+\item
+  We can use the normal distribution as our reference distribution in a
+  theory based test provided we have at least 10 successes and 10
+  failures \textbf{in each group}. If that is the case we can say that
+  the CLT has kicked in and we use the two-sample z-test.
+\end{enumerate}
+
+Conduct the 2-sample z-test below and create a 95\% CI for the
+difference in proportions:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\# Theory{-}based approach}
+\DocumentationTok{\#\# 2{-}sample z {-} test for equality of proportions}
+\NormalTok{n\_left }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(T1[,}\DecValTok{1}\NormalTok{]) }
+\NormalTok{n\_right }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(T1[,}\DecValTok{2}\NormalTok{]) }
+\NormalTok{phat }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(T1[}\DecValTok{2}\NormalTok{,])}\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(T1)}
+
+\NormalTok{z }\OtherTok{\textless{}{-}}\NormalTok{ (phat\_dif)}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(phat}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{phat)}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\NormalTok{n\_left }\SpecialCharTok{+} \DecValTok{1}\SpecialCharTok{/}\NormalTok{n\_right))}
+\DecValTok{2}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\FunctionTok{pnorm}\NormalTok{(}\FunctionTok{abs}\NormalTok{(z)))                 }\CommentTok{\# Ha two{-}sided}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.03981831
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Confidence interval}
+\NormalTok{se }\OtherTok{\textless{}{-}} \FunctionTok{sqrt}\NormalTok{( ( phat\_left}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{phat\_left)}\SpecialCharTok{/}\NormalTok{n\_left) }\SpecialCharTok{+}\NormalTok{ ((phat\_right}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{phat\_right))}\SpecialCharTok{/}\NormalTok{n\_right) )}
+\NormalTok{multiplier }\OtherTok{\textless{}{-}} \FunctionTok{qnorm}\NormalTok{(.}\DecValTok{975}\NormalTok{)}
+
+\FunctionTok{c}\NormalTok{((phat\_dif)}\SpecialCharTok{{-}}\NormalTok{multiplier}\SpecialCharTok{*}\NormalTok{se , (phat\_dif)}\SpecialCharTok{+}\NormalTok{multiplier}\SpecialCharTok{*}\NormalTok{se)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.009254591 0.502940531
+\end{verbatim}
+
+\hypertarget{choice-2-chi-square-test}{%
+\paragraph{Choice 2: Chi-square test}\label{choice-2-chi-square-test}}
+
+\textbf{The statistic}:
+\[\small \chi^2 = \sum_{Cells} \frac{(Obs-Exp)^2}{Exp}\] where the
+Observed are the values in the contingency table and the Expected values
+are calculated from what we would have expected to get in each cell if
+\(\pi_{left}=\pi_{right}\) (if the null hypothesis was true).
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{8}
+\tightlist
+\item
+  Assuming the null hypothesis is true, use the overall proportion of
+  success you found earlier to calculate the expected values for the 2 x
+  2 table below.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Number of left side sleepers who have/do not have nightmares}
+\FunctionTok{c}\NormalTok{(n\_left}\SpecialCharTok{*}\NormalTok{phat, n\_left}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{phat))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1]  7.333333 14.666667
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Number of right side sleepers who have/do not have nightmares}
+\FunctionTok{c}\NormalTok{(n\_right}\SpecialCharTok{*}\NormalTok{phat, n\_right}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{phat))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 13.66667 27.33333
+\end{verbatim}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{9}
+\tightlist
+\item
+  How many left-side (right-side) sleepers do we expect to have/not have
+  nightmares?
+\end{enumerate}
+
+\textcolor{blue}{So, if $H_0$  is true, we expect, out of 22 people given who sleep on the left side, $22   imes hat{p}$, or 7.33 to have nightmares, and 14.67 not to have nightmares.}
+
+\textcolor{blue}{Out of the 41 people who sleep on their right side, we would have expected $ 41    imes hat{p} = 13.67$ to have nightmares and 27.33 to not have nightmares.}
+
+\vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{10}
+\tightlist
+\item
+  For the theory-based approach we compare the statistic to our
+  reference distribution which is the \(\small \chi^2\) distribution
+  with \(\small (r-1)(c-1)\) degrees of freedom, where r is the number
+  of rows and c is the number of columns in the contingency table,
+  provided we have at least 10 observations \textbf{in each cell}.
+  Calculate the degrees of freedom for this example:
+\end{enumerate}
+
+\textcolor{blue}{df = (2-1)(2-1) = 1.}
+
+\vspace{0.25in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{11}
+\tightlist
+\item
+  Calculate the \(\chi^2\) statistic and p-value.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{NM }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{L=}\FunctionTok{c}\NormalTok{(}\DecValTok{11}\NormalTok{,}\DecValTok{11}\NormalTok{), }
+                 \AttributeTok{R=}\FunctionTok{c}\NormalTok{(}\DecValTok{31}\NormalTok{,}\DecValTok{10}\NormalTok{), }
+                 \AttributeTok{row.names =} \FunctionTok{c}\NormalTok{(}\StringTok{"no"}\NormalTok{,}\StringTok{"yes"}\NormalTok{))}
+\NormalTok{EXP }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{L=}\FunctionTok{c}\NormalTok{(n\_left}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{phat),n\_left}\SpecialCharTok{*}\NormalTok{phat), }
+                  \AttributeTok{R=}\FunctionTok{c}\NormalTok{(n\_right}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{phat),n\_right}\SpecialCharTok{*}\NormalTok{phat), }
+                  \AttributeTok{row.names =} \FunctionTok{c}\NormalTok{(}\StringTok{"no"}\NormalTok{,}\StringTok{"yes"}\NormalTok{))}
+\NormalTok{NM}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      L  R
+## no  11 31
+## yes 11 10
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{EXP}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             L        R
+## no  14.666667 27.33333
+## yes  7.333333 13.66667
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{my.chisq }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{( (NM}\SpecialCharTok{{-}}\NormalTok{EXP)}\SpecialCharTok{\^{}}\DecValTok{2} \SpecialCharTok{/}\NormalTok{ EXP)}
+\NormalTok{my.chisq}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 4.22561
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{pchisq}\NormalTok{(my.chisq, }\DecValTok{1}\NormalTok{, }\AttributeTok{lower.tail =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.03981831
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{pchisq}\NormalTok{(z}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{, }\AttributeTok{lower.tail =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.03981831
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# Chi{-}square test (same as z test for two sample proportions)}
+\CommentTok{\# my.table \textless{}{-} table(nightmare$Nightmare,nightmare$Side)   \# Variable order matters; don\textquotesingle{}t use this one!}
+\NormalTok{T2 }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(nightmare}\SpecialCharTok{$}\NormalTok{Side,nightmare}\SpecialCharTok{$}\NormalTok{Nightmare)  }\CommentTok{\# use this one!}
+\NormalTok{pptest }\OtherTok{\textless{}{-}} \FunctionTok{prop.test}\NormalTok{(T2,}\AttributeTok{correct =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{pptest}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  2-sample test for equality of proportions without continuity correction
+## 
+## data:  T2
+## X-squared = 4.2256, df = 1, p-value = 0.03982
+## alternative hypothesis: two.sided
+## 95 percent confidence interval:
+##  -0.502940531 -0.009254591
+## sample estimates:
+##    prop 1    prop 2 
+## 0.5000000 0.7560976
+\end{verbatim}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{12}
+\tightlist
+\item
+  What do you notice about the value for \(z\) from the two-sample
+  z-test and the value for \(\chi^2\)? 1 \textbf{\(z^2 \approx \chi^2\)}
+\end{enumerate}
+
+\vspace{0.5in}
+
+\hypertarget{choice-3-relative-risk-ratio-ratio-of-two-proportions}{%
+\paragraph{Choice 3: Relative Risk Ratio (Ratio of two
+proportions)}\label{choice-3-relative-risk-ratio-ratio-of-two-proportions}}
+
+Used especially for rare diseases. This is because, as your book points
+out, if you are working with a rare disease and you find that the
+incidence rate increases from 1\% to 2\%, this is a difference of only
+one percentage point, but it represents a doubling of the rate (a 100\%
+increase).
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{13}
+\tightlist
+\item
+  \textbf{The statistic}: How do we calculate and interpret the RR?
+  Ratio of conditional proportions of success
+  \(\frac{\hat{p}_{left}}{\hat{p}_{right}}\) with the larger proportion
+  in the numerator for ease of interpretation,i.e., how many times the
+  conditional proportion of success is larger in one group compared to
+  the other. Under \(\small H_0\) there is no difference in the
+  proportion of successes between groups. What is the relative risk in
+  this situation?
+\end{enumerate}
+
+\textcolor{blue}{When the conditional proportions of interest are the same for both (all) groups, the value for RR will be 1.}
+
+\vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{14}
+\tightlist
+\item
+  Calculate the relative risk ratio below and interpret the result.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# Relative risk ratio}
+\NormalTok{phat\_left}\SpecialCharTok{/}\NormalTok{phat\_right}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 2.05
+\end{verbatim}
+
+\textbackslash textcolor\{blue\}\{The value of 2.05 means that the
+conditional proportion of a nightmare (success) in the left-side
+sleepers is 2.05 times more likely than the right-side sleepers. This
+represents a 100\% x (2.05 - 1) = 105\% increase. \}
+
+\vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{15}
+\tightlist
+\item
+  What are some issues with having a theory based approach with the
+  relative risk ratio?
+\end{enumerate}
+
+\textcolor{blue}{We really want to be cautious here because if we look at the null distribution for the simulation we would see that it looks kinda sort of normal but there is a bit of a right skew. Other issues with RR. Like we mentioned before, 'success' is arbitrarily decided. If we flipped it around in this scenario so that success was 'not having a nightmare' it would seem that nightmares are more prevalent if the subject sleeps on their right side. This is not the interpretation that we would necessarily want to give.}
+
+\vspace{0.5in}
+
+\hypertarget{choice-4-odds-ratio}{%
+\paragraph{Choice 4: Odds Ratio}\label{choice-4-odds-ratio}}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{16}
+\tightlist
+\item
+  \textbf{The statistic}: Yet another statistic (that we will see is
+  quite useful in some cases) is the odds ratio.
+\end{enumerate}
+
+\begin{itemize}
+\item
+  The odds ratio is formed by comparing the odds of success from group 1
+  to the odds of success from group 2. So from our data set, we compute
+  the odds of success for subjects who sleep on their left and those
+  that sleep on their right, and then use those odds to calculate the
+  odds ratio. Odds are \(p/1-p\) where \(p\) is a proportion or
+  probability.
+\item
+  In English it is common to use probability and odds interchangeably
+  but they are NOT the same.
+\item
+  Calculate the odds ratio for our nightmare dataset and interpret the
+  results.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# Odds ratio}
+\NormalTok{odds\_left }\OtherTok{\textless{}{-}}\NormalTok{ T1[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{/}\NormalTok{T1[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]       }\CommentTok{\# Odds of having a nightmare sleeping on the left side  }
+\NormalTok{odds\_right }\OtherTok{\textless{}{-}}\NormalTok{ T1[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{]}\SpecialCharTok{/}\NormalTok{T1[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]       }\CommentTok{\# Odds of having a nightmare sleeping on the right side.}
+\NormalTok{OR }\OtherTok{\textless{}{-}}\NormalTok{ odds\_left}\SpecialCharTok{/}\NormalTok{odds\_right}
+\FunctionTok{c}\NormalTok{(odds\_left, odds\_right, OR)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.0000000 0.3225806 3.1000000
+\end{verbatim}
+
+\vspace{0.25in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{17}
+\tightlist
+\item
+  How rare is this under \(H_0\)? We can use our shuffling simulation
+  strategy to estimate:
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{376}\NormalTok{)}
+
+\NormalTok{M }\OtherTok{\textless{}{-}} \DecValTok{5000}
+\NormalTok{results }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{stat =} \FunctionTok{rep}\NormalTok{(}\ConstantTok{NA}\NormalTok{,M))}
+
+\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{M)\{}
+\NormalTok{  nm.mod }\OtherTok{\textless{}{-}}\NormalTok{ nightmare }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{shuff.cat =} \FunctionTok{sample}\NormalTok{(Side))}
+\NormalTok{  my.table }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(nm.mod}\SpecialCharTok{$}\NormalTok{Nightmare, nm.mod}\SpecialCharTok{$}\NormalTok{shuff.cat)}
+\NormalTok{  p.tabl }\OtherTok{\textless{}{-}} \FunctionTok{prop.table}\NormalTok{(my.table,}\DecValTok{2}\NormalTok{)}
+\NormalTok{  odds.sim.left }\OtherTok{\textless{}{-}}\NormalTok{ p.tabl[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{] }\SpecialCharTok{/}\NormalTok{ p.tabl[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]}
+\NormalTok{  odds.sim.right }\OtherTok{\textless{}{-}}\NormalTok{ p.tabl[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{] }\SpecialCharTok{/}\NormalTok{ p.tabl[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]}
+\NormalTok{  results}\SpecialCharTok{$}\NormalTok{stat[i] }\OtherTok{\textless{}{-}}\NormalTok{ odds.sim.left }\SpecialCharTok{/}\NormalTok{ odds.sim.right}
+\NormalTok{\}}
+
+\NormalTok{results }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{stat)) }\SpecialCharTok{+} \FunctionTok{geom\_histogram}\NormalTok{()}\SpecialCharTok{+}
+  \FunctionTok{geom\_vline}\NormalTok{(}\AttributeTok{xintercept =}\NormalTok{ OR, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{color =} \StringTok{"red"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Lesson_22_Nightmares_SOLN_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sum}\NormalTok{(results}\SpecialCharTok{$}\NormalTok{stat }\SpecialCharTok{\textgreater{}=}\NormalTok{ OR) }\SpecialCharTok{/}\NormalTok{ M}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.041
+\end{verbatim}
+
+\vspace{0.25in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{18}
+\tightlist
+\item
+  Under the null hypothesis \(\small H_0\) (there is no difference in
+  the proportion of successes between groups), what should the the Ratio
+  between \texttt{Odds\_left/odds\_right} be equal to?
+\end{enumerate}
+
+\textcolor{blue}{The odds ratio should be equal to one under the null hypothesis.}
+
+\vspace{0.5in}
+
+\begin{enumerate}
+\def\labelenumi{(\arabic{enumi})}
+\setcounter{enumi}{19}
+\tightlist
+\item
+  In order to use a theory based test involving Odds, it turns out that
+  it often times is better to use log-Odds. Though harder to interpret.
+  The OR is generally symmetric, it turns out that log-Odds converges
+  super quickly under the CLT to a normal distribution, which makes life
+  really nice.
+\end{enumerate}
+
+Next lesson we will continue to use log-odds as a statistic. Our
+statistical model will called a logistic regression model. This can be
+fit in R using an extremely flexible class of models known as a
+Generalized Linear Models.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{nightmare }\OtherTok{\textless{}{-}}\NormalTok{ nightmare }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{nite.bin =} \FunctionTok{ifelse}\NormalTok{(Nightmare }\SpecialCharTok{==} \StringTok{"Yes"}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
+\NormalTok{my.glm }\OtherTok{\textless{}{-}} \FunctionTok{glm}\NormalTok{(nite.bin }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Side, }\AttributeTok{data =}\NormalTok{ nightmare, }\AttributeTok{family =} \StringTok{"binomial"}\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(my.glm)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## glm(formula = nite.bin ~ Side, family = "binomial", data = nightmare)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.1774  -0.7478  -0.7478   1.1774   1.6799  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(>|z|)  
+## (Intercept) -1.597e-15  4.264e-01   0.000   1.0000  
+## SideR       -1.131e+00  5.604e-01  -2.019   0.0435 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 80.201  on 62  degrees of freedom
+## Residual deviance: 76.052  on 61  degrees of freedom
+## AIC: 80.052
+## 
+## Number of Fisher Scoring iterations: 4
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{my.glm.coefs }\OtherTok{\textless{}{-}} \FunctionTok{coef}\NormalTok{(my.glm)}
+\NormalTok{my.glm.coefs}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   (Intercept)         SideR 
+## -1.597444e-15 -1.131402e+00
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{exp}\NormalTok{(}\FunctionTok{abs}\NormalTok{(my.glm.coefs[}\DecValTok{1}\NormalTok{]))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## (Intercept) 
+##           1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{exp}\NormalTok{(}\FunctionTok{sum}\NormalTok{(my.glm.coefs))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.3225806
+\end{verbatim}
+
+\textcolor{blue}{The log-odds of someone who had nightmares and slept on the Left side is ~0; the odds are $exp(0) = 1$. }
+
+\textcolor{blue}{The log-odds of someone who had nightmares and slept on the right side is (0 + -1.13) = -1.13; the odds are $exp(0 + -1.13) = 0.32258$. }
+
+\vspace{0.5in}
+
+\end{document}

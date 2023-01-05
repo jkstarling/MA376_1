@@ -1,0 +1,240 @@
+---
+title: "Kentucky Derby Winning Times"
+author: "CDT I. M. Smrt"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+```{r}
+# Load packages
+library(tidyverse)
+library(ggResidpanel)
+ 
+### Data management
+ky.dat<-read.table("https://raw.githubusercontent.com/jkstarling/MA376/main/KYDerby18.txt",
+                   header=T, 
+                   stringsAsFactors = TRUE)
+
+# setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN20/")
+# ky.dat <- read.table("KYDerby18.txt", header = TRUE, stringsAsFactors = TRUE)
+```
+
+#### Background
+Recall that the general form for a linear regression model is:
+$$y_i = \beta_0 + \beta_1 x_{1,i}  +  \beta_2x_{2,i} + \cdots + \beta_{n}x_{n,i} + \epsilon_i$$
+
+We can think about this model as having two components, a linear predictor $\beta_0 + \beta_1 x_{1,i} + \beta_{2}x_{2,i} + \cdots + \beta_{n}x_{n,i}$ and a random mechanism that perturbs us from the plane, $\epsilon_i$.
+
+#### Quadratic Models
+However, sometimes, we might believe that the relationship between our explanatory and response variable is not linear. This may be for a few different reasons, perhaps the best reason is that we have some previous knowledge that suggests they have a nonlinear relationship. Therefore it might make sense to talk about a general form for statistical models.
+
+The simplest function outside of a linear relationship is if we assume a quadratic model
+$$y_i=\beta_0 + \beta_1 x_{1,i} + \beta_2 x_{1,i}^2$$
+This is, what our text calls, a polynomial statistical model.  Fitting the model can be achieved in the exact same way as a linear regression model. 
+
+(1) Create a scatterplot of the winning times vs. the years. Describe any patterns you see. Are there any unusual observations? How do you suggest proceeding with the analysis of how the performance of the horses has changed over the years?To see this, let's consider the Kentucky Derby data. For question 1 we create the scatter plot of time vs years.
+
+```{r, fig.height=3, fig.width=5, fig.align='center'}
+# ky.dat %>% ggplot(**FILLIN**
+```
+\vspace{0.5in}
+
+
+
+(2) Looks kinda weird...  But as it turns out, the distance changed in 1896, so we're comparing apples to oranges. The Derby was first run at a distance of 1.5 miles but in 1896 the distance changed to its current 1.25 miles (2 kilometers).
+
+Produce a scatterplot of the speeds of the winning horse (in miles per hour) vs. year. What is the overall pattern in these speeds over the years? Why does this pattern make sense in this context? Are there any unusual observations now? (If so, identify by name.) Does it make sense to fit a linear model to these data? 
+
+```{r,fig.height=3, fig.width=5, fig.align='center'}
+# ky.dat %>% ggplot(**FILLIN**
+```
+\vspace{0.5in}
+
+
+
+(3) What type of model might we want to fit? Why? 
+\vspace{0.5in}
+
+
+(4) Fit a quadratic model to predict speed from year and year^2.
+
+```{r}
+# ky.dat <- ky.dat %>% **FILLIN**
+# poly.lm<-lm(**FILLIN**
+# summary(poly.lm)
+```
+\vspace{0.5in}
+
+
+(5) To check the fit plot the model on your scatterplot.  You can add the model by adding `geom_line()` to your plot.  The `data` for this geom is the model you made above and `.fitted` will provide the model values for your aesthetics. 
+
+```{r, fig.height=3, fig.width=5, fig.align='center'}
+# ky.dat %>% ggplot(**FILLIN**
+```
+
+(6) Interpret the intercept of this model.
+
+\vspace{0.5in}
+
+
+(7) Write the fitted model or predicted equation. Is the coefficient of year^2 positive or negative, and what does that imply about the relationship between speed and year as year increases? (Hint: You can think of this as an interaction between year and year!)
+
+\vspace{0.5in}
+
+
+(8) Does this model meet our validity conditions?
+
+```{r}
+# resid_panel(**FILLIN**
+```
+
+\vspace{0.5in}
+
+
+
+(9) If we want to use this model to predict, we could use the `predict()` function.  How do we interpret this output?
+```{r}
+# predict(**FILLIN**
+```
+
+\vspace{0.5in}
+
+
+(10) Look at the following code. What does the blue line represent? Does our model perform well? What are some potential issues we may have with our explanatory variables? 
+
+```{r, fig.height=3, fig.width=5, fig.align='center'}
+# pred.df<-data.frame(**FILLIN**)
+# ky.dat %>% ggplot(**FILLIN**) + geom_point() + 
+#   geom_line(aes(**FILLIN**),data=**FILLIN**,lwd=1,color="red") + 
+#   geom_segment(aes(**FILLIN**),lwd=1,colour = "blue", data = pred.df)
+```
+
+\vspace{0.5in}
+
+
+(11) Create a scatterplot of year^2 and year. What does this tell you?
+
+```{r}
+# ky.dat %>% ggplot(**FILLIN**
+```
+
+\vspace{0.5in}
+
+
+(12) How can we adjust for this?
+
+\vspace{0.25in}
+
+
+(13) Standardize the year and year^2 variables and refit your model.
+
+```{r}
+# ky.dat.std = ky.dat %>% mutate_at(list(~scale(.)), .vars = vars(**FILLIN**)) %>% 
+  # mutate(Year.sq = Year^2)
+# poly.lm.std<-lm(**FILLIN**
+# summary(poly.lm.std)
+# ky.dat.std %>% ggplot(**FILLIN**
+```
+
+(14) Provide an interpretation of the intercept of this model (include units!). 
+
+\vspace{0.5in}
+
+
+#### Adjusting for track conditions  
+
+(15) If we want to we can adjust for track conditions. Create a model that adjusts for track conditions. To see if the added variables are important we can compare it to the smaller (nested) model via which test?  What are the hypotheses for this test? 
+
+```{r}
+# levels(factor(ky.dat$condition))
+# condition.lm<-lm(**FILLIN**
+# summary(condition.lm)
+```
+
+
+$H_0:$ 
+
+$H_a:$ 
+
+\vspace{0.5in}
+
+
+(16) Conduct the partial-F test between the condition model and the original quadratic model. What are your conclusions?
+
+```{r}
+# anova(**FILLIN**
+```
+
+ \vspace{0.5in}
+
+
+(17) Would the model you have created be useful in predicting this year’s Kentucky Derby winner? Explain why or why not. (Hint: Consider issues beyond validity conditions.)
+
+\vspace{0.5in}
+
+
+(18) Now let's take a look at the cubic model.  Create a model predicting speed with year, year^2 and year^3. Does this appear to significantly improve the fit?
+
+```{r}
+# ky.dat.std <- ky.dat.std %>% **FILLIN**
+# ky.dat <- ky.dat %>% **FILLIN**
+# poly3.lm<-lm(**FILLIN**
+# summary(poly3.lm)
+# anova(poly.lm, poly3.lm)
+```
+
+\vspace{0.5in}
+
+
+(19) Changing gears... try performing transformations on the data. Create scatterplots of  1) log(year) vs. speed; 2) sqrt(year) vs. speed; 3) year-squared vs. speed. Which transformation looks like it has the best fit? Create a linear model
+
+```{r}
+# # ky.dat <- ky.dat %>% **FILLIN**
+# ky.dat %>% ggplot(aes(x=Year.sqrt, y=speed)) + geom_point() + labs(title="sqrt(year) vs speed")
+# ky.dat %>% ggplot(aes(x=Year.sqrt, y=speed)) + geom_point() + labs(title="sqrt(year) vs speed")
+# ky.dat %>% ggplot(aes(x=Year.sq, y=speed)) + geom_point() + labs(title="year^2 vs speed")
+
+# log.lm <- ky.dat %>% lm(**FILLIN**
+# summary(log.lm)
+```
+
+\vspace{0.5in}
+
+
+(20) An alternative is to use the log transformation but shifted by a value. Create a new variable `log(Year.log - 1874)`. Create a scatterplot of this transformation vs. speed. Does it appear to be more successful? Justify your answer. 
+```{r}
+# my_year <- **FILLIN**
+# ky.dat <- ky.dat %>%**FILLIN**
+# ky.dat %>% ggplot(aes(x=Year.log2, y=speed)) + geom_point()
+```
+\vspace{0.5in}
+
+
+(21) Create a linear model to predict speed using the updated transformation in (20). What is a 95% prediction interval in 2019?  
+```{r}
+# log.lm2 <- ky.dat %>% lm(**FILLIN**
+# summary(log.lm2)
+# predict(log.lm2,data.frame(Year.log2=log(2019-my_year)),interval="prediction")
+```
+
+\vspace{0.5in}
+

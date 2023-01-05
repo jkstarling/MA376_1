@@ -1,0 +1,277 @@
+---
+title: "Lesson 18 Cereal (5.1)"
+author: "LTC J. K. Starling"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+#### Background
+Added sugar may very well be the single worst ingredient in the modern diet. It contributes to several chronic diseases, and most people are eating way too much of it. Notably, most of this sugar comes from processed foods — and breakfast cereals are among the most popular processed foods that are high in added sugars. In fact, most cereals list sugar as the second or third ingredient. Starting the day with a high-sugar breakfast cereal will spike your blood sugar and insulin levels. A few hours later, your blood sugar may crash, and your body will crave another high-carb meal or snack — potentially creating a vicious cycle of overeating. Excess consumption of sugar may also increase your risk of type 2 diabetes, heart disease, and cancer.
+
+Today we will take a look at the association between *sugar*, *calories*, and how people *rate* popular breakfast cereals.
+
+```{r}
+# Load packages
+library(tidyverse)
+library(ggResidpanel)
+library(car)
+library(cowplot)
+ 
+### Data management
+cereal <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/cereal.csv", header = TRUE, stringsAsFactors = TRUE)
+
+# setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN18/")
+# cereal <- read.csv("cereal.csv", header = TRUE, stringsAsFactors = TRUE)
+
+# select calories, sugar, and rating
+cereal <- cereal %>% select(calories.per.serving, grams.of.sugars,Rating.of.cereal)
+```
+
+#### Single-variable models
+1) Let us look at the single-variable models. 
+
+```{r}
+sugar.lm <- cereal %>% lm(Rating.of.cereal ~ grams.of.sugars, data = .)
+summary(sugar.lm)
+
+calories.lm <- cereal %>% lm(Rating.of.cereal ~ calories.per.serving, data = .)
+summary(calories.lm)
+```
+
+2)  What are the single-variable models? Write them down here.
+
+
+
+\vspace{0.5in}
+
+
+3) Which explanatory variable, sugar or calories, has the largest impact on rating? What are we using to decide? 
+
+
+\vspace{0.5in}
+
+4) Can we use the partial F test to decide? 
+
+\vspace{0.5in}
+
+6)  In what situation can we use the partial F-test?
+
+
+7)  What do we conclude based on the $R^2$ values? 
+
+\vspace{0.5in}
+
+8)  What does it mean that the sum of the $R^2$ for the two individual models is greater than one?
+
+
+\vspace{0.5in}
+
+
+#### Two-variable model
+9) What is the mathematical model that helps us answer the research question?  Write it down. 
+
+
+\vspace{0.5in}
+
+
+10) What is a key advantage to analyzing the two variables simultaneously? 
+
+\vspace{0.5in}
+
+
+11) Consider the multiple regression model summary below. 
+Is this a better model? 
+What are our conclusion based on the p-values? 
+How do we interpret coefficients?
+
+```{r}
+both.lm <- cereal %>% lm(Rating.of.cereal ~ grams.of.sugars + calories.per.serving, data = .)
+summary(both.lm)
+```
+
+
+\vspace{1.0in}
+
+12) **Key idea: If you have a balanced, factorial design, even with quantitative explanatory variables, the slope coefficients in the two-variable model will be the same as in the one-variable models because you have designed the study so that there is no association between the explanatory variables.** Why is this not the case with this example data set?  
+
+\vspace{0.5in}
+
+
+#### Two-variable model with standardized factors
+13) Can we look at the $\hat{\beta_1}$ and $\hat{\beta_2}$ and deduce which factor has more of an effect on predicted rating? Why or why not? 
+```{r}
+summary(cereal$calories.per.serving)
+summary(cereal$grams.of.sugars)
+```
+
+\vspace{0.5in}
+
+14)  What do we need to do to the factors so that we can look directly at the magnitude of the slope coefficients to determine which variable has more of an effect on cereal rating? 
+
+\vspace{0.5in} 
+
+
+15) How do we standardize? 
+
+\vspace{0.5in}
+
+
+
+16)  Standardize the data. Provide a scatter plot of the regular and standardized data. Explain what you see. 
+```{r}
+cereal_std = cereal %>%
+  mutate_at(list(~scale(.)), .var = vars(grams.of.sugars, calories.per.serving))
+
+# plot regular and standardized data
+p.reg <- cereal %>% ggplot(aes(x=calories.per.serving, y=grams.of.sugars)) + 
+  geom_point() + 
+  expand_limits(x = 0, y = 0)
+
+p.std <- cereal_std %>% ggplot(aes(x=calories.per.serving, y=grams.of.sugars)) + 
+  geom_point()
+
+plot_grid(p.reg, p.std, ncol=2)
+```
+
+\vspace{0.5in}
+
+
+17) Will this mess up the strength of the associations with the response? 
+
+\vspace{0.5in}
+
+
+18) What is added advantage of standardizing quantitative variables? 
+
+\vspace{0.5in}
+
+
+
+19) Fit the model with the standardized variables.
+```{r}
+std.lm <- cereal_std %>% lm(Rating.of.cereal ~ grams.of.sugars + calories.per.serving, data = .)
+summary(std.lm)
+
+#must calculate to fully interpret coefficients
+cereal %>% select(grams.of.sugars, calories.per.serving) %>% 
+  summarise_all(list(~mean(.), ~sd(.)))
+```
+
+What are our conclusion based on the p-values? How do we interpret coefficients?
+
+
+
+\vspace{1.0in}
+
+**Key idea: Remember, all relationships or associations are not correlations. The authors note that if we also standardized the response variable, then the standardized slope coefficients would be equal to the correlation coefficients for the adjusted variables.**
+
+20) To see if this is a good model, we of course have to check the validity conditions. What are they? Do we have any concerns?
+
+```{r fig.height=3, fig.width=5,fig.align="center"}
+resid_panel(std.lm, plots = c("hist", "resid"))
+```
+
+
+
+#### Interaction model
+
+21) Create the interaction model. What does an interaction between two quantitative variables mean?
+
+```{r}
+inter.lm <- cereal_std %>% lm(Rating.of.cereal ~ grams.of.sugars * calories.per.serving, data = .)
+summary(inter.lm)
+
+```
+
+\vspace{0.5in}
+
+
+
+*Key idea: An additional advantage to standardizing variables is the interaction product variable will not be linearly related to either variable involved in the interaction. In other words, the coefficient of determination is additive.*
+
+22) How can we test whether a model with an interaction is preferable to the two-variable model? 
+
+
+\vspace{0.5in}
+
+
+23) What are our conclusion based on the p-values? 
+```{r}
+anova(std.lm,inter.lm)
+```
+
+\vspace{0.5in}
+
+
+24) Let's check the validity conditions for the interaction model.
+```{r fig.height=3, fig.width=5,fig.align="center"}
+resid_panel(inter.lm, plots = c("hist", "resid"))
+```
+
+\vspace{0.5in}
+
+
+25) Let's plot the data in a 3D scatter-plot:
+
+```{r, include=FALSE, eval=FALSE}
+library(plotly)
+
+cereal.int = cereal_std %>% 
+  mutate(cals = as.vector(calories.per.serving),
+         sugar = as.vector(grams.of.sugars),
+         fitted = as.vector(predict(std.lm, newdata = .)),
+         fittedint = as.vector(predict(inter.lm, newdata = .)) )
+
+plot_ly(x=cereal.int$cals, y = cereal.int$sugar, z=cereal.int$fitted, type = "scatter3d", mode="markers", size=1)
+plot_ly(x=cereal.int$cals, y = cereal.int$sugar, z=cereal.int$Rating.of.cereal, type = "scatter3d", mode="markers", size=1)
+
+fig <- plot_ly() %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$Rating.of.cereal,
+            type = "scatter3d", 
+            mode="markers",color='LightSkyBlue', size=1) %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$fitted,
+            type = "scatter3d", 
+            mode="markers",color='MediumPurple', size=2)
+fig.int <- plot_ly() %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$Rating.of.cereal,
+            type = "scatter3d", 
+            mode="markers",color='LightSkyBlue', size=1) %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$fittedint,
+            type = "scatter3d", 
+            mode="markers",color='MediumPurple', size=2)
+
+fig
+fig.int
+
+```
+
+
+
+
+

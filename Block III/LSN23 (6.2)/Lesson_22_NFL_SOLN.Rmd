@@ -1,0 +1,284 @@
+---
+title: "Lesson 22 NFL Field Goals"
+author: "LTC J.K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+# `r colorize("....", "blue")`  # use this to color text
+```
+
+```{r}
+# Load packages
+library(tidyverse)
+library(table1)
+
+### Data management
+#loading play by play for the 2021 season
+# library(nflfastR)
+# data <- load_pbp(2021)
+# field_goal <- data %>% filter(is.na(field_goal_result)!=T)
+
+
+# field_goal <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/fg_2021.csv",header=T, stringsAsFactors = TRUE)
+
+setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN22/")
+field_goal <- read.csv("fg_2021.csv", header = TRUE, stringsAsFactors = FALSE)
+
+
+```
+
+
+#### Background
+The 2021 NFL Season had seen some historically bad weeks for the field goal kickers. In this lesson we will look at the relationship between kick distance and and field goal result, and the relationship between field surface and field goal result as part of the model building process.
+
+
+(1) Explore the variables `field_goal_result` and `surface` using the `table()` command. What do you notice? Can we simplify the data? (ask for the email...)
+\vspace{1in}
+
+```{r}
+table(field_goal$field_goal_result)
+table(field_goal$surface)
+```
+
+
+```{r}
+# Selecting only field goals and changing blocked field goals to be missed.  
+field_goal <- field_goal %>% 
+  mutate(field_goal_result = case_when(field_goal_result=="blocked"~"missed", 
+                                       TRUE~field_goal_result)) %>% 
+  mutate(field_goal_result = fct_rev(as.factor(field_goal_result)))
+
+#changing the variations of turf to just turf
+fg <- field_goal %>% 
+  mutate(surface = case_when(surface=="astroturf"~"turf",
+                             surface=="fieldturf"~"turf", 
+                             surface=="fieldturf "~"turf", 
+                             surface=="matrixturf"~"turf",
+                             surface=="sportturf"~"turf",
+                             TRUE~surface)) %>% 
+  mutate(surface = as.factor(surface))
+```
+
+
+(2) Create a contingency table using the `table1()` command.
+\vspace{1in}
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Contingency table
+table1(~field_goal_result|surface, data = fg)
+```
+
+
+
+(3) Calculate the odds ratio comparing field goals attempted on turf and field goals attempted on grass? 
+\vspace{1in}
+```{r}
+odds_turf = 381/58
+odds_grass = 537/100
+OR = odds_turf/odds_grass
+OR
+(OR - 1) * 100
+```
+
+(4) How do we interpret the odds ratio? 
+\vspace{1in}
+
+*The odds of field goals attempted on turf being made are 1.22 times larger than the odds of field goals attempted on grass being made OR field goals attempted on turf are 22% more likely to be made compared to field goals attempted on grass*
+
+
+(5) What if I wanted the odds ratio between field goals attempted on grass and field goals attempted on turf, how do I calculate and interpret it? 
+\vspace{1in}
+```{r}
+1/OR
+(1/OR - 1) * 100
+```
+
+Field goals attempted on grass are 18% less likely to be made compared to field goals attempted on turf. 
+
+
+#### Logistic Regression Model
+To be able to adjust for the field surface we need some type of model. Because we have a binary response we will use the logistic regression model. The logistic regression model is a linear equation that takes the form:
+$$\small  logit(\pi_i) = ln\left(\dfrac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 x_i $$
+where log odds are linearly related to $\small x$ (if we graph $\small \pi$ and $\small x$ they are related in the S-shaped curve.) **Notice we do not have an error term in the logit model. This is because we are not modelling individual values of the response variable.**
+
+I am assuming that you are familiar with logs with base $e$, where $e$ represents Euler's constant of approx 2.718. R uses base log base $e$ by default when you use the *log* function.
+
+The model estimate is: 
+
+$$\small  \text{Predicted log odds} = logit(\hat{p}_i) = ln\left(\dfrac{\hat{p}_i}{1-\hat{p}_i}\right) = b_0 + b_1 x_i$$
+With this model we can estimate the probability of success $\small\pi$ (estimated proportion of success) by following the rules of logs and exponents.
+
+$$\small  exp\left[ln\left(\dfrac{\hat{p}_i}{1-\hat{p}_i}\right)\right]  = exp \left[b_0 + b_1 x_i\right] \\
+\small \dfrac{\hat{p}_i}{1-\hat{p}_i} = exp\left[b_0 + b_1 x_i\right]\\
+\small \hat{p}_i = \dfrac{exp\left[b_0 + b_1 x_i \right]}{1+ exp\left[b_0 + b_1 x_i \right]}$$
+
+
+(6) We conduct inference on our coefficients as usual. What are the null and alternative hypotheses? How will we know if the coefficient is statistically significant?
+\vspace{1in}
+
+- **Null: There is no linear relationship between the log odds and the explanatory variable** 
+
+- **Alternative: There is a linear relationship between the log odds and the explanatory variable**
+
+$$\small H_0: \beta_1 = 0 \text{ vs } H_A: \beta_1 \neq 0$$
+
+- **Confidence interval containing the null value (0) indicates that the estimate is not statistically significant.**
+
+
+(7) How do we get the odds ratios given the log odds? 
+\vspace{1in}
+
+*We exponentiate to get the odds ratio* 
+
+
+(8) Our hypotheses are: $$\small H_0: OR = 1 \text{ vs } H_A: OR \neq 1$$
+- Confidence interval containing the null value indicates that the estimate is not statistically significant. So if we are dealing with OR, when do we have a statistically significant result?  
+\vspace{1in}
+
+*When 1 is NOT in the CI.*
+<br>
+<br>
+ 
+ 
+#### Categorical Explanatory Variable
+(9) Fit the model with the binary explanatory variable that indicates whether or not the the field goal was attempted on turf or grass. (remember to check the levels of the **surface** variable with the function `contrasts()`)
+\vspace{1in}
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+contrasts(fg$surface)
+surface.glm <- fg %>% glm(field_goal_result~surface, data=., family='binomial')
+summary(surface.glm)
+coef(surface.glm)                # Predicted log odds of making the field goal
+confint(surface.glm)
+```
+
+(10) How do we interpret the coefficients directly from the model? What conclusions can we draw based on the confidence interval?
+\vspace{1in}
+
+*The intercept of 1.6808 is the predicted log odds for field goal attempted on grass*
+
+*The $\hat{\beta_1}$ coefficient is the change in log odds going from **kicking on grass** to **kicking on turf**.*
+
+*The confidence interval for $\hat{\beta_1}$ contains 0 indicating that there is not a statistically significant relationship between surface type and log odds.* 
+
+
+(11) Typically these interpretations don't make much sense to the consumer; how do we write them and interpret them in terms of odds ratio? What conclusions can we draw based on the confidence interval? 
+\vspace{1in}
+
+```{r}
+exp(coef(surface.glm))           
+exp(confint(surface.glm))
+```
+
+*The odds of making a field goal on grass is 5.37:1 or in other words we would expect to make 5.37 field goals for every miss.*
+
+*The odds of making a field goal on grass is (5.370+1.223):1 = 6.593:1 or we can say that we would expect to make 6.593 field goals for every miss.*
+
+*We are 95% confident that field goals kicked on turf have a 0.86 times smaller odds to 1.74 times larger odds of being made than field goals kicked on grass. This CI contains 1 indicating that there is not a significant difference in the odds of making a kick on turf vs grass.*
+
+
+(12) What is the predicted probability of field goal attempted on grass? On turf?
+\vspace{1in}
+
+```{r}
+#On Grass
+#log odds = 1.6808
+odds_grass = exp(1.6808)
+prob_grass = odds_grass/(1+odds_grass)
+
+#On Turf
+#log odds = 1.6808+0.2015 = 1.8823
+odds_turf = exp(1.8823)
+prob_turf = odds_turf/(1+odds_turf)
+
+odds_turf/odds_grass
+```
+
+*Our predicted success probability of a field goal attempted on grass is 0.8430*
+
+*Our predicted success probability of a field goal attempted on turf is 0.8679*
+
+<br>
+<br>
+
+
+#### Quantitative Explanatory Variable
+(13) Fit the model with the quantitative explanatory variable that captures kick distance.
+\vspace{1in}
+
+```{r echo=TRUE, fig.height=3, fig.width=3, message=FALSE, warning=FALSE, fig.align='center'}
+distance.glm <- glm(field_goal_result ~  kick_distance, data=fg, family='binomial')
+coef(distance.glm)                # Predicted log odds of survival
+confint(distance.glm) 
+```
+
+
+(14) How do we interpret the coefficients directly from the model? What conclusions can we draw based on the confidence interval?
+\vspace{1in}
+
+*The intercept of 6.55 is the predicted log odds for field goal attempted with a distance of 0 yards*
+
+*The $\hat{\beta_1}$ coefficient of -0.11 is the change in log odds for an increase in 1 yard of kick distance.*
+
+*The confidence interval for $\hat{\beta_1}$ does not contain 0 indicating that there is a statistically significant relationship between kick distance and log odds.* 
+
+
+(15) Typically these interpretations don't make much sense to the consumer; how do we write them and interpret them in terms of odds ratios? What conclusions can we draw based on the confidence interval?
+\vspace{1in}
+
+```{r}
+exp(coef(distance.glm))           
+exp(confint(distance.glm))        
+```
+
+*The slope coefficient indicates a multiplicative change (x 0.8934) for each increase of 1 yard in distance.*
+
+*The confidence interval does not contain 1 indicating a significant relationship between kick distance and odds.*
+
+(16) What is the predicted probability of making a field goal from 20 yards?  44 yards?  60 yards? What is the relationship between predicted probability and kick distance?
+\vspace{1in}
+
+```{r}
+newobs.data <- data.frame(kick_distance = c(20, 44, 60))
+
+predict.glm(distance.glm, newdata=newobs.data, type="response")
+
+# Predicted probability (inverse logit)
+distance.dat.sub <- fg %>% mutate(distance.pp = distance.glm$fitted.values)
+#view(smoke.dat.sub)
+distance.dat.sub %>% ggplot(aes(x=kick_distance, y=distance.pp) ) + 
+  geom_point() +
+  geom_line()+
+  theme_classic()
+```
+
+*The predicted probability of a 20/44/60 yard field goal is 0.9865/0.8301/0.4458. There is a negative relationship between predicted probability and kick distance.*
+
+<br>
+<br>
+
+In this lesson we looked at the relationship between field surface and making a field goal, and the relationship between kick distance and making a field goal as part of the model building process. Next week we will put it all together to answer a research question with a multivariate logistic regression model 
+<br>
+<br>
+
+#### References
+
+Nathan Tintle et al.(2019). Intermediate Statistical Investigations for U.S. Military Academy at West Point.

@@ -1,0 +1,176 @@
+---
+title: "Lesson 24 Spotify Solution"
+author: "LTC J.K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+
+library(tidyverse)
+
+music <- read_csv("https://raw.githubusercontent.com/jkstarling/MA376/main/Spotify.csv")
+
+setwd("c:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN24/")
+music <- read_csv("spotify.csv")
+# View(music)
+```
+
+\begin{center} \includegraphics[width=4cm, height=4cm]{i-love-this-song-so-much.jpg} \end{center}
+ 
+\textbf{Part I: Background}
+
+\vspace{0.15cm}
+ 
+Spotify recommends songs based on user listening history. The algorithms use the characteristics of the music a user is known to like to figure out the music the user may like but has not discovered yet.
+
+In this lab you will use logistic regression to build a model that predicts the probability a user likes a song based on its characteristics. The data is from the Spotify Song Attributes data set which contains the song preferences of a single Spotify user. The data set contains the characteristics of 2017 songs and whether the Spotify user liked the song (1-like , 0-dislike). 
+
+Some of the available attributes are:
+
+- Danceability: How suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.
+
+- Acousticness: A measure from 0.0 to 1.0 of whether the track is acoustic.
+
+- Energy: A measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy.
+
+- Instrumentalness: Predicts whether a track contains no vocals. The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content.
+
+- Key: Denotes the major or minor scale in which a piece of music operates, and thus, the notes that belong in it.  
+
+- Liveness: Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live.
+
+- Loudness: The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track. Values typical range between -60 and 0 db.
+
+- Mode: Indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. 
+
+- Speechiness: Detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value.
+
+- Tempo: The overall estimated pace of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.
+
+- Valence: A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).
+
+
+(1) Use the definitions in the documentation to classify the following variables: instrumentalness, key, danceability, mode, and tempo?
+\vspace{0.75in}
+
+
+\textbf{Part II: Exploratory Data Analysis}
+
+\vspace{0.15cm}
+
+\textbf{Before you begin your analysis, be sure to change the categorical variables you will use into factors.}
+
+(2) Create a) a boxplot to look at the distribution of 'danceability' based on whether the Spotify user liked the song and b) a bar graph to look at the distribution of 'key' based on whether the Spotify user liked the song.
+
+```{r,fig.height=3, fig.width=5, fig.cap="Danceability by Like"}
+# class(music$like)
+music <- music %>% mutate(like = as.factor(like), key = as.factor(key), mode = as.factor(mode))
+
+ggplot(data=music,aes(x=like,y=danceability)) + geom_boxplot()+ theme_classic()
+```
+
+```{r,fig.height=3, fig.width=5, fig.cap="Like vs. Key"}
+ggplot(data=music,aes(x=key)) + geom_bar(aes(fill=like)) + theme_classic()
+```
+
+(3) Use no more than five sentences to summarize your observations from both plots.
+
+\vspace{3in}
+
+
+\textbf{Part III: Logistic Regression Model}
+
+\vspace{0.15cm}
+
+(4) Write the general form of the logistic regression model that includes every explanatory variable in question 1.
+
+$$\text{logit }(\pi_i) = \beta_0 + \beta_1 \text{ instrumentalness}_i + \beta_2 \text{ danceability } + \beta_3 \text{ mode } + \beta_4 \text{ tempo } $$
+
+where $\pi$ is the probability the Spotify user will like the song.
+
+(5) Fit the model in question 4. 
+
+```{r}
+add.model <- glm(like ~ instrumentalness + danceability + 
+                  mode + tempo, family='binomial',data=music )
+summary(add.model)
+```
+
+- Interpret the coefficient for danceability and comment on it's statistical significance at the 0.05 level.
+\vspace{1 in}
+
+**An increase of one unit of danceability results in a 2.77 increase in the average log odds after adjusting for mode, tempo, and instrumentalness.**  
+
+- Report and interpret the odds ratio and the associated 95% confidence interval.
+\vspace{1.5 in}
+
+```{r}
+exp(coef(add.model))
+exp(confint(add.model)) 
+```
+
+**Odds ratio: Increasing the danceability by 1 unit increased the odds ratio by 15.95 times.**  
+
+**CI: We are 95% confident that the true odds ratio increases by 8.79 to 29.21 times when danceability is increased by 1 unit.**   
+
+(6) Explain what it means for there to be an interaction between mode and tempo. Use a model to evaluate whether it is reasonable to believe that there is an interaction between ode and tempo. Be sure to provide supporting evidence for your response.
+\vspace{1.5in}
+
+**An interaction between mode and tempo means that the mode of a song changes the effect of tempo on log odds of the person liking the song.**
+
+```{r}
+# Interaction model
+interact.model <- glm(like ~ instrumentalness +  danceability + 
+                  mode*tempo, family='binomial',data=music )
+summary(interact.model)
+```
+
+**The p-value for the interaction term of 0.664 is greater than the significance level of 0.05 indicating that the interaction is not statistically significant.** 
+
+\textbf{Part IV: Model Assessment}
+
+(7) Recall that the primary goal of this analysis is to predict the probability this Spotify user will like a song. Regardless of your responses in previous questions, let us pretend that both the models in question 4 and 6 are valid for inference. What metric could you use to select the better model for prediction?
+
+**AIC**
+
+\textit{Note to students: The null deviance shows how well the response variable is predicted by a model that includes only the intercept (grand mean) where as the residual deviance shows how well the inclusion of independent variables predicts the response variable.}
+
+\vspace{1in}
+ 
+(8) Write the equation to calculate the predicted probability the Spotify user likes a particular song based on the preferred model.
+\vspace{1.5in}
+
+$$\small \hat{p}_i = \dfrac{exp\left[\hat\beta_0 + \hat\beta_1 \text{instrumentalness} + \hat\beta_2 \text{danceability} + \hat\beta_3 \text{mode} + \hat\beta_4\text{tempo} \right]}{1+ exp\left[\hat\beta_0 + \hat\beta_1 \text{instrumentalness} + \hat\beta_2 \text{danceability} + \hat\beta_3 \text{mode} + \hat\beta_4\text{tempo} \right]} $$
+
+(9) Use a cutoff of 0.5 to calculate the correct classification rate for the preferred model.
+\vspace{0.5 in}
+
+```{r}
+# Calculating correct classification rate
+music <- music %>% mutate(add.pp = add.model$fitted.values)
+music <- music %>% mutate(pred.add = case_when(add.pp >= 0.5 ~ 1, TRUE~0))
+library(table1)
+table1(~like|as.factor(music$pred.add), data = music) 
+(610+638)/2017 
+```
+
+(10) How well does the model distinguish between two songs: “Sign of the Times” by Harry Styles and “Hotline Bling” by Drake. Briefly explain using supporting evidence. (Insert the preferred model in the code below to calculate the probability the user likes the two songs).
+
+\vspace{1 in}
+
+
+```{r}
+# Read data for “Sign of the Times” by Harry Styles and “Hotline Bling” by Drake
+test_songs <- read_csv("https://raw.githubusercontent.com/jkstarling/MA376/main/test_songs.csv")
+test_songs <- test_songs %>% mutate(mode = as.factor(mode))
+
+# Predicted probability based on preferred model
+predict.glm(add.model, newdata=test_songs, type="response")
+```
+
+**The model gives a predicted probability of 0.33 that the user will like sign of the times and a predicted probability of 0.64 that the user will like hotline bling.  Using our cut off of 0.5 we would predict that the user would like hotline bling and would dislike sign of the times**
+

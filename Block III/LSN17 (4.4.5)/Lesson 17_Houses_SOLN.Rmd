@@ -1,0 +1,329 @@
+---
+title: "Lesson 17 Michigan Housing Prices (4.3-4.4)"
+author: "by LTC J. K. Starling"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+```{r}
+#Load Packages
+library(tidyverse)
+library(ggResidpanel)
+library(car)
+#read in data
+houses = read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/houses.csv", stringsAsFactors = TRUE)
+```
+
+
+
+
+#### **Background**: Many people say that you can predict the cost of a home by its size (square footage).  Today we will look to verify this claim using a sample of homes around Lake Michigan.  
+
+
+1) What are the observational units? What is the response variable and which is the explanatory variable? Are they quantitative or categorical? 
+
+`r colorize("For these homes (observational units), we have two quantitative variables (price and square footage). We are attempting to use square footage (the explanatory variable) to help explain home prices (the response variable). Because we don’t have multiple observations for the same house size, it doesn’t make sense to fit a separate-means model, so instead we will start with the linear model.", "blue")`
+
+
+
+2) Plot the data and include a regression line. What do we learn from the regression line? Does a linear model appear to be reasonable?  
+
+
+```{r, fig.height = 3}
+houses %>% 
+  ggplot(aes(x = sqft, y = price.1000)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE)+
+  theme_classic()
+```
+
+
+3) Write out the appropriate linear model and fit the model in R. How do we interpret these estimated parameters? Are our validity conditions met? 
+
+```{r}
+model_simple <- houses %>% lm(price.1000 ~ sqft, data = .)
+summary(model_simple)
+```
+
+
+${price}_i = \beta_0 + \beta_1 sqft1000_i + \epsilon_i$
+`r colorize(",where $price_i$ is the price of house $i$ and $sqft1000_i$ is the size (sq ft) of house $i$ (in 1000 sqft).","blue")`
+
+`r colorize("The yintercept,","blue")` $\hat{\beta}_0$ `r colorize("implies that the predicted price of a home is -59,370 dollars when the square footage is 0. However, we have to be very careful in extrapolating our regression line beyond the range of data in the sample. We don't know if the linear trend we observed between 903 and 3353 square feet continues outside of that range. The slope value ","blue")` $\hat{\beta}_1$ `r colorize("of 212.70 dollars indicates that the price of a home is predicted to increase by 212.70 dollars with each additional square foot.","blue")`
+
+
+4) We have another variable in the data set - location. We can consider adding this variable to the regression model. What is the classification of the location variable? 
+
+Take a look at the figure. What do we notice? 
+What would we hope to accomplish by adding this`lake` variable to the regression model?
+
+```{r}
+houses %>% 
+  ggplot(aes(x = sqft, y = price.1000, color = lake)) +
+  geom_point() + 
+  geom_line(aes(x = houses$sqft, y = model_simple$fitted.values))+
+  labs(title = "Does lakefront affect price and sqft?", 
+       x = "Price", y = "Square Feet", color = "Lakefront") +
+  theme_classic()
+```
+
+
+`r colorize("Categorical. We can explain variation in house prices AND we can explain variation in house prices not already explained by the house size variable.","blue")`
+
+`r colorize("We can adjust for a confounding variable by including it in a multiple regression model.  In this model, we estimate the price per square foot when we hold the location of the house constant.","blue")`
+
+
+5) We can adjust for this categorical variable by including it in a multiple regression model.  In this model, we estimate the price per square foot when we hold the location of the house constant. Write out the updated regression model. 
+
+
+\[{price}_i = \beta_0 + \beta_1 sqft_i + \beta_2 lake_i + \epsilon_i \]
+`r colorize("where $price_i$ is the price of house $i$, $sqft_i$ is the size (sq ft) of house $i$, and $lake_i$ is 1 if house $i$ is lakefront and is 0 otherwise. ","blue")`
+
+
+
+6) How do we interpret the coefficients? 
+What assumptions does this model make? 
+In general, when will $\beta_1$ from this model equal $\beta_1$ in the simple model?
+
+$\beta_0$ = `r colorize("the average price of a home that is 0 square feet after and not on the lake..","blue")`
+\vspace{.25in}
+
+$\beta_1$ = `r colorize("the change in the average price of a home for an increase of one square foot after adjusting for location..","blue")`
+\vspace{.25in}
+
+$\beta_2$ = `r colorize("the change in the average price of a home for a change of location to lake after adjusting for size..","blue")`
+
+`r colorize("The slope for both the lake houses and nonlake houses are the same.","blue")`
+
+`r colorize("When there is no impact from lake","blue")`
+
+\vspace{.25in}
+
+
+7)  Consider the updated model below and the updated figure. How did the estimate of the price per square footage change when we held location constant? 
+
+```{r, fig.height = 3}
+#Reverse coding of lake so 1 is lake and 0 is not lake
+houses$lake2 = factor(houses$lake, levels = c("notlakefront",
+                                             "lakefront"))
+
+model_withLake = lm(price.1000 ~ sqft + lake2, data = houses)
+
+houses <- houses %>% mutate(price.predict = predict(model_withLake, newdata = .),
+                            residuals = price.1000 - price.predict) 
+
+houses %>% ggplot(aes(x = sqft, y = price.predict, color = lake2)) +
+  geom_line() +
+  geom_point(aes(y = price.1000))
+
+summary(model_withLake)
+```
+
+
+`r colorize("The price per square foot has decreased to $148.10.","blue")`
+
+
+8) What is our new regression model? 
+Calculate the expected price of a 2500 sq ft house that is not on the lake front.
+Calculate the expected price of a 2500 sq ft house on the lake front.
+How do we interpret $\beta_0$?
+
+\[\hat{price}_i = -70.1821 + (0.1481\times sqft_i) + (331.2235 \times lake_i)\]
+
+```{r}
+-70.1821+(0.1481*2500)+(331.2235*0)
+```
+
+
+```{r}
+-70.1821+(0.1481*2500)+(331.2235*1)
+```
+`r colorize("$\beta_0$ = the price of a house that is not on the lake and has 0 square feet.",'blue')`
+
+\vspace{0.5in}
+
+
+9) Let's take a look at the residuals vs the predicted (fitted) values. Do we meet validity conditions? 
+
+```{r fig.height=3, fig.width=5, message=FALSE, warning=FALSE}
+resid_panel(model_withLake, plots = c('hist', 'resid'))
+```
+
+\vspace{0.5in}
+
+
+10) Do we see evidence of an interaction here?
+
+```{r fig.width=10}
+houses %>% ggplot(aes(x = price.predict, 
+                      y = residuals,
+                      color = lake2)) +
+  geom_point() + geom_hline(yintercept = 0)
+```
+  
+
+`r colorize("Yes, we tend to over underpredict smaller non lake homes and overpredict larger non lake homes while we overpredict smaller lake homes and underpredict larger lake homes.",'blue')`
+\vspace{0.25in}
+
+
+
+## Two models
+
+11) If we suspect the price per square foot differs for lake front and nonlake front, we could fit two separate simple models.  How do we interpret our two slope coefficients?
+
+```{r, fig.height=3}
+houses %>% ggplot(aes(x = sqft, y = price.1000, color = lake)) +
+  geom_point() + geom_smooth(method = "lm", se = F)
+
+lake_model <- lm(price.1000 ~ sqft, data = houses %>% filter(lake == "lakefront"))
+summary(lake_model)
+coef(lake_model)
+
+nonlake_model <- lm(price.1000 ~ sqft, data = houses %>% filter(lake == "notlakefront"))
+summary(nonlake_model)
+coef(nonlake_model)
+```
+
+
+`r colorize("The price per square foot for lakefront homes is \\$219.89 and the price per square foot for non-lakefront homes is \\$83.94.",'blue')`
+
+\vspace{0.25in}
+
+
+
+## Interactions
+
+12) Let's look at a model with an interaction. 
+
+\[{price}_i = \beta_0 + \beta_1 sqft_i + \beta_2 lake_i + \beta_3 sqft_ilake_i + \epsilon_i \]
+
+How do we interpret $\beta_1$? $\beta_2$? $\beta_3$? $\beta_1 + \beta_3$? $\beta_0$?
+
+\vspace{0.25in}
+
+
+$\beta_0$ = `r colorize(" the average price for a non lakefront home with 0 square feet.",'blue')`
+\vspace{0.25in}
+
+$\beta_1$ = `r colorize(" the price per square foot of a non lakefront home.",'blue')`
+\vspace{0.25in}
+
+$\beta_2$ = `r colorize(" the difference in price between a lakefront and non lakefront home with 0 square feet.",'blue')`
+\vspace{0.25in}
+
+$\beta_3$ = `r colorize(" the difference in price per square foot between non lakefront and lakefront homes.",'blue')`
+\vspace{0.25in}
+
+$\beta_1 + \beta_3$ = `r colorize(" the price per square foot of a lakefront home.",'blue')`
+
+\vspace{0.25in}
+
+
+```{r, fig.height=3}
+model_interaction = lm(price.1000 ~ sqft * lake2, data = houses)
+summary(model_interaction)
+Anova(model_interaction, type ="3")
+```
+
+13) Write the equation for the price of a lake front house as a function of size and write the equation for the price of a nonlake house as a function of size.
+
+
+
+\[\hat{price}_i = (58.11341+28.65098) + (0.08394+0.13595)\times sqft_i\] 
+\[=\]
+\[\hat{price}_i = 86.76439 + (0.21989\times sqft_i)\]
+\vspace{0.25in}
+
+\[\hat{price}_i = 58.11341 + (0.08394\times sqft_i)\] 
+\vspace{0.25in}
+
+
+
+14) How do these equations compare to the two models above? (\#11)
+
+`r colorize("The two equations are the same as the two individual models that we created earlier.",'blue')`
+\vspace{0.25in}
+
+
+15) Is there evidence the price per square foot is different for lakefront and nonlakefront homes? How do you know?",'blue')`
+
+`r colorize("Yes, the interaction term in the model is significant.",'blue')`
+\vspace{0.25in}
+
+
+
+16) What would you conclude from these results? Your answer should include discussion of effect sizes, significance, and overall predictive capability of the model.
+
+
+`r colorize("We have a relatively good predictive model since we are accounting for almost 97% of the price of the homes.  Both the square footage and interaction of square footage and location are significant in the model.  ",'blue')`
+\vspace{0.25in}
+
+
+**The main effect of location is not significant in the model with an interaction.  Should we conclude the location of the house is not associated with price? Justify your answer.**
+
+`r colorize("No, location is significant in that it modifies the affect of size.",'blue')`
+\vspace{0.25in}
+
+
+
+## Comparing Models
+
+17) Certainly our $R^2$ increased, but if we know square footage do we gain anything by knowing if the house is by the water or not? That is, we want to do a single test that evaluates whether the variable square footage is significant or not. 
+
+(Note that if we have multiple categories, if we test each category separately we are inflating the Type I error.) 
+
+Is the interaction model preferable?
+
+`r colorize("If you look at the R2 of the interaction model it is 0.9684 while the R2 values of the two individual models are 0.9098 and 0.7655.  We account for more of the variability in the response variable with the interaction model.","blue")`
+
+\vspace{0.25in}
+
+
+18) We may also want to use something called the partial-F test to see if the addition of additional variables is beneficial. 
+For this we go to the ANOVA to answer the question to ``Is the interaction model preferable?''
+First we will compare the `model_simple` to the `model_withLake` and then the `model_simple` to the `model_interaction` :
+  
+```{r}
+Anova(model_simple, type="3")
+Anova(model_withLake, type="3")
+Anova(model_interaction, type="3")
+```
+
+```{r}
+anova(model_simple, model_withLake)
+anova(model_simple, model_interaction)
+anova(model_withLake, model_interaction)
+```
+
+`r colorize("Since the interaction is statistically significant we should use the model with the interaction term.","blue")`
+
+\vspace{0.25in}
+
+
+19) Now that we have a final model what should we check before we can trust our conclusions?
+
+```{r}
+resid_panel(model_interaction, plots = c('hist', 'resid'))
+resid_panel(model_withLake, plots = c('hist', 'resid'))
+```
+`r colorize("L - yes; I - yes; N - not so good....; E - our standard deviations appear to have equal variance.","blue")`
+
+\vspace{0.25in}
+

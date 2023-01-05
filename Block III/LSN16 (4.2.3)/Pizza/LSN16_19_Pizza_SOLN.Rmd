@@ -1,0 +1,377 @@
+---
+title: "Lesson 16 Pizza."
+author: "by LTC J. K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+
+#### Background:
+A consumer organization rated various frozen pizzas on taste. The results are in the file Pizza.csv where the Rating is out of 100 (higher is better), the Calories are per serving, the Fat is in grams per serving, and the Pepperoni variable indicates whether there was pepperoni on the pizza (0-No; 1-Yes).
+
+```{r Setup, message=FALSE,warning=FALSE}
+# Load packages
+library(tidyverse)
+library(ggResidpanel)
+
+# pizza.dat <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/Pizza_w_pepp.csv", stringsAsFactors = TRUE)
+setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN16/")
+pizza.dat <-read_csv("Pizza_w_pepp.csv")
+# glimpse(pizza.dat)
+
+# Change categorical variables to 'factors'
+pizza.dat <- pizza.dat %>% mutate(Pepperoni = as.factor(Pepperoni))
+```
+
+#### Step 1: Ask a research question.
+
+`r colorize("What factors are associated with pizza taste rating?", "blue")`
+
+
+#### Step 2: Design a study and collect data.
+(@) Is this study an observational study or a randomized experiment? Explain.
+
+`r colorize("Observational study; we are not randomizing observations to experimental groups.", "blue")`
+
+
+#### Step 3: Explore the data
+
+(@) Create individual plots to explore the association between taste rating and each explanatory variables.
+
+
+
+```{r associations}
+pizza.dat %>% ggplot(aes(x=Fat, y=Rating, color=Pepperoni)) + geom_point()
+
+pizza.dat %>% ggplot(aes(x=Fat, y=Calories, color=Pepperoni)) + geom_point()
+# pizza.dat %>% ggplot(aes(x=Calories, y=Rating, color=Pepperoni))+geom_point()
+# 
+# pizza.dat %>% ggplot(aes(x=Rating, y=Pepperoni, group=Pepperoni, color=Pepperoni)) + geom_boxplot() +geom_point()
+
+
+```
+
+#### Step 4: Draw inferences beyond the data
+
+
+<center> **Multiple-Means Models** </center>
+
+Up until now we have been using statistical models of the form:
+
+$\hat{y}_{ij} = \mu_j $ or $\hat{y}_{ij} = \mu + \alpha_j $
+
+
+
+
+```{r}
+pizza.dat$lowcal <- ifelse(pizza.dat$Calories <=335, 'low', 'high')
+```
+
+
+
+
+<center> **Simple Linear Regression Models** </center>
+
+Consider the following linear regression model (indicator coding).
+
+\[y_i = \beta_0 + \beta_1 \text{x}_1 + \epsilon_i \quad \epsilon_i \sim \text{Normal}(0,\sigma^2)\]
+
+-  Interpret $\beta_1$ in the model.
+
+
+
+ 
+- Interpret $\beta_0$ in the model.
+
+
+
+
+
+**Fit the simple linear regression models (indicator coding).**
+
+(@) Interpret the coefficient/estimate for Calories. Is there evidence of a significant association between Calories and Rating? 
+
+`r colorize("For each extra calorie, predicted taste rating increases by 0.133 points. A p-value = 0.237 suggests that this is not a significant association at the 0.05 significance level.", "blue")`
+
+
+
+(@) Are the validity conditions for the theory-based test satisfied?
+
+- L
+- I
+- N
+- E
+ 
+```{r Calories, message=FALSE, warning=FALSE, out.width='60%'}
+
+calories.lm <- lm(Rating ~ Calories, data=pizza.dat)
+summary(calories.lm)
+
+resid_panel(calories.lm, plots = c('hist', 'resid'))  # Validity conditions
+```
+
+
+
+(@) Interpret the coefficient for Fat.
+
+
+
+(@) Calculate and interpret a 95% confidence interval for the estimate of the slope for Fat.  Is there evidence of a significant association between Fat and Rating? 
+
+`r colorize("For each extra gram of fat, predicted taste rating increases by 0.0.397 points. XXX.", "blue")`
+
+```{r Fat, message=FALSE, warning=FALSE}
+
+fat.lm <- lm(Rating ~ Fat, data=pizza.dat)
+summary(fat.lm)
+
+confint(fat.lm)
+```
+
+
+
+(@) Interpret the coefficient for Pepperoni. Is there evidence of a significant association between Pepperoni and Rating?
+
+
+
+(@) What percent of the variation in Rating can be explained by Pepperoni? `r colorize("0.7% ", "blue")`
+
+```{r Pepperoni, message=FALSE, warning=FALSE}
+
+pepperoni.lm <- lm(Rating ~ Pepperoni, data=pizza.dat)
+summary(pepperoni.lm)
+
+```
+
+
+
+
+(@) Is it accurate to say that the relationship between Calories and Rating is causal. Why or why not? 
+
+`r colorize("No it is not causal. Fat may confound the relationship between Calories and Rating.", "blue")`
+
+`r colorize("Key idea:", "red")` Because fat is a potentially confounding variable we can either 1) adjust the rating values by fat OR 2) adjust the calories values for fat. The key idea is that in an observational study adjusted associations  may be different than the unadjusted association (coefficients may change). Recall that an advantage of a balanced factorial designed experiment is that the adjusted and unadjusted associations are the same (coefficients do not change). 
+
+
+ 
+
+### Lesson 17
+
+<center> **Multiple Linear Regression Models** </center>
+
+Consider the two-variable linear regression model (indicator coding).
+
+\[\small \text{y}_i = \beta_0 + \beta_1 \text{x}_1 + \beta_2 \text{x}_2 + \epsilon_i \quad \epsilon_i \sim \text{Normal}(0,\sigma^2)\]
+
+-  Interpret $\beta_1$ in the model.
+
+
+
+
+- Interpret $\beta_0$ in the model.
+
+
+
+
+
+**Fit the two-variable (multiple) linear regression model with Fat and Calories (indicator coding).**
+
+```{r Two-variable model (indicator coding), message=FALSE,warning=FALSE}
+two.var <-lm(Rating ~ Calories + Fat, data=pizza.dat)
+summary(two.var)
+
+confint(two.var) 
+```
+
+
+
+(@) Let us assume the validity conditions for the theory-based test are satisfied (they really are not, we should simulate!), what conclusions can we make about the *model*? Be sure to provide evidence to support your conclusions.
+
+(@) What proportion of the variation in Rating can be explained by Calories after adjusting for Fat? Is this more than without adjusting for Fat?
+  `r colorize("18.1%. It is more than without adjusting for Fat.", "blue")`
+
+(@) What does the coefficient on Calories mean in context? Is this a significant association? `r colorize("For each extra calorie, predicted taste rating increases by 0.752 after adjusting for fat. i.e. if we keep fat at a fixed value the regression equation predicts that taste rating will increase if we increase calories.", "blue")`
+
+(@) Calculate and interpret a 95% confidence interval for the coefficient for Calories. `r colorize("The true coefficient for calories is between 0.09 and 1.41, with 95% certainty.(Statistically significant)", "blue")`
+
+(@) What does the coefficient on Fat mean in context? `r colorize("For each extra gram of fat, predicted taste rating goes down by 4.51 points after adjusting fror calories, i.e. if we keep the calories at a fixed value the regression equation predicts that taste rating will decrease with increased fat.", "blue")`
+
+
+ 
+
+<center> **Multiple Linear Regression Model with an Interaction** </center>
+
+(@) What does it mean for there to be an interaction between Calories and Fat? 
+  `r colorize("An interaction between calories and fat, two quantitative variables, means that there are different linear associations between taste rating and calories for pizzas with different fat content.", "blue")`
+
+`r colorize("Key idea:", "red")` The question of whether there is an interaction is a  different question than whether or not adjusting for fat changes the overall association between rating and calories. `r colorize("(DRAW CAUSAL DIAGRAMS TO DISTINGUISH BETWEEN THESE TWO IDEAS.)", "red")`
+
+Now consider the linear regression model with the interaction term.
+
+\[\text{Rating}_i = \beta_0 + \beta_1 \text{x}_1 + \beta_2 \text{x}_2 + \beta_3 \text{x}_1 *\text{x}_2 + \epsilon_i \quad \epsilon_i \sim \text{Normal}(0,\sigma^2)\]
+
+-  Interpret $\beta_3$ in the model.
+There is no unique effect of $x_1$ or $x_2$ on the response. WLOG, let's say we are talking about $x_1$-  the relationship between $x_1$ and the response is different for every $x_2$ (there is no  unique effect of $x_1$).
+
+$\beta_3$ is the additional effect of $x_1$ on the response at every $x_2$
+
+
+
+
+-  Interpret $\beta_1$ in the model.
+Really be careful! This is the additional change in the response given a unit change in $x_1$ provided $x_2 = 0$
+
+In other words if I wanted to know the total effect of $x_1$ on the response I would need to take into account $\beta_1$ and $\beta_3$.
+
+
+
+
+- Interpret $\beta_0$ in the model.
+Average response when $x_1=0$ and $x_2=0$ (in the effect model it is the grand mean!)
+
+
+
+
+**Fit the multiple linear regression model with an interaction between Fat and Calories (indicator coding).**
+
+(@) In words, write the null and alternative hypotheses associated with $\beta_3$ for the model that includes an interaction between Fat and calories.
+`r colorize("Null hypothesis: There is no interaction between calories and fat, alternative hypothesis: There is an interaction between calories and fat.", "blue")`
+
+```{r Interaction model (indicator coding),message=FALSE,warning=FALSE}
+interact.lm <-lm(Rating ~ Calories * Fat, data=pizza.dat)
+summary(interact.lm)
+```
+
+(@) Once again, assuming that the validity conditions for the theory-based test are satisfied, what can we conclude about the *model*?
+
+
+
+(@) For a fixed value of Calories, does the regression equation predict Ratings to go up or down as Fat increase?
+  `r colorize("For a fixed value of calories, the regression equation predicts ratings will increase as fat increases.", "blue")`
+
+
+
+(@) Does the interaction term significantly improve the model? Explain
+  `r colorize("No. the interaction term is not significant so we should throw this model in the trash.", "blue")`
+
+
+(@) Let's pretend that the interaction term was significant. How can we test whether a statistically significant model with an interaction is preferable to the statistically significant two-variable model? (We're also pretending that the validity conditions are satisfied for both models).
+
+```{r}
+anova(two.var, interact.lm )
+
+```
+  
+  
+
+(@) What other interactions may we want to consider?
+
+
+ 
+
+
+### Lesson 18
+
+(@) Can we look at the $b_1$ and $b_2$ and deduce which factor has more of an effect on predicted taste rating? Why or why not? 
+
+`r colorize("*The factors are on different scales so we cannot compare them directly.*", "blue")` 
+
+- What do we need to do to the factors so that we can look directly at the magnitude of the slope coefficients to determine which variable has more of an effect on taste rating. 
+
+`r colorize("*Standardize.*", "blue")`
+
+
+- How do we standardize? 
+
+`r colorize("*To standardize a variable we subtract the mean and divide by the standard deviation. Each standardized variable will have a mean of zero and a standard deviation of one.*", "blue")` 
+
+- Will this mess up the strength of the associations with the response? 
+
+`r colorize("*Standardizing the two variables has done nothing to change the strength of the associations with the response variable.*", "blue")` 
+
+- How about the lack of association with each other? 
+
+`r colorize("*We've also done nothing to change associations or lack of associations. The study design did not change.*", "blue")` 
+
+- What is added advantage of standardizing quantitative variables? 
+
+`r colorize("*We can get a more meaningful intercept that is guaranteed to be in the middle of your data, rather than involving extrapolation or nonsensical values).*", "blue")` 
+
+`r colorize("Key idea:", "red")` When explanatory variables (including interactions) have a strong linear association with other explanatory variables, this can lead to larger standard errors on the slope coefficients and a larger residual standard error for the model overall.A linear association between explanatory variables is known as collinearity. This is bad! If we were looking at the interaction model, standardizing removes the linear association between the interaction and the other explanatory variables.  
+
+`r colorize("Key idea:", "red")` Standardizing does not reduce the collinearity between main variables (though it can reduce the VIF, a commonly used indicator for concerns for collinearity).
+
+Ok. Let us fit the interaction model with the standardized variables.
+```{r,message=FALSE,warning=FALSE}
+mean(pizza.dat$Calories); mean(pizza.dat$Fat)
+pizza.cov <-pizza.dat %>%mutate_at(funs(scale(.)),.vars=vars(-c(Rating, Pepperoni)))
+std.lm <- lm(Rating ~ Calories * Fat,data=pizza.cov)
+summary(std.lm)
+
+```
+
+(@) What does the intercept mean in context?
+
+`r colorize("From the regression line we predict that the taste rating will  be 61.10 for pizzas that have 350.6 calories and 15 grams of fat.", "blue")`
+
+(@) What does the coefficient on Calories mean in context?
+
+`r colorize("Predicted taste rating increases by 28.318  points for each standard deviation increase in calories when holding fat at its mean value OR Predicted taste rating decreases by 28.318 points for each unit increase in standardized calories when holding standardized fat = 0.", "blue")`
+
+
+<!-- ```{r,message=FALSE,warning=FALSE, fig.height=3} -->
+<!-- # resid_panel(std.lm, plots = c('hist', 'resid'), bins = 17) -->
+<!-- ```` -->
+
+(@)  Are the assumptions of this model valid for the data?
+
+`r colorize("We assume that the observations are indpendent based on the study design. With so few data points, the residual plot is a little hard to gauge but it appears fairly scattershot (a few more underestimates that overestimates) this implies homoskedasticity (equal variance) and linearity assumptions are satisfied. The histogram is fairly symmetric suggesting the normality assumption is also satisfied.", "blue")`
+
+
+
+
+
+
+#### Step 5: Formulate conclusions
+
+(@) Based on your analysis so far, summarize the conclusions you would draw from this study.Be sure to address statistical significance, generalizability, and causation. Also be sure to put your comments into the context of this research study.
+
+
+
+#### Step 6: Look back and ahead
+
+(@) Suggest at least one way you would improve this study if you were to carry it, or a follow-up study, out yourself.
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+

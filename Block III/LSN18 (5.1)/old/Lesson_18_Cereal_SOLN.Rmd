@@ -1,0 +1,289 @@
+---
+title: "Lesson 18 Cereal"
+author: "LTC J. K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+#### Background
+Added sugar may very well be the single worst ingredient in the modern diet. It contributes to several chronic diseases, and most people are eating way too much of it. Notably, most of this sugar comes from processed foods — and breakfast cereals are among the most popular processed foods that are high in added sugars. In fact, most cereals list sugar as the second or third ingredient. Starting the day with a high-sugar breakfast cereal will spike your blood sugar and insulin levels. A few hours later, your blood sugar may crash, and your body will crave another high-carb meal or snack — potentially creating a vicious cycle of overeating. Excess consumption of sugar may also increase your risk of type 2 diabetes, heart disease, and cancer.
+
+Today we will take a look at the association between sugar, calories, and how people rate popular breakfast cereals.
+
+```{r}
+# Load packages
+library(tidyverse)
+library(ggResidpanel)
+library(car)
+ 
+### Data management
+# cereal <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/cereal.csv", header = TRUE, stringsAsFactors = TRUE)
+
+setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN18/")
+cereal <- read.csv("cereal.csv", header = TRUE, stringsAsFactors = TRUE)
+
+# select calories, sugar, and rating
+cereal <- cereal %>% select(calories.per.serving, grams.of.sugars,Rating.of.cereal)
+```
+
+#### Single-variable models
+(@) Ok. Let us look at the one-variable models. Which explanatory variable, sugar or calories, has the largest impact on rating?
+
+- What are we using to decide? 
+\vspace{1in}
+
+`r colorize("*Coefficient of determination.*", "blue")`
+
+- Can we use the partial F test to decide? 
+\vspace{1in}
+
+`r colorize("*No. These models are not nested.*", "blue")`
+
+
+- In what situation can we use the partial F-test?
+\vspace{1in}
+
+`r colorize("*To decide whether the two-variable model is preferred over either of our single variable models.*", "blue")`
+
+
+```{r}
+sugar.lm = lm(Rating.of.cereal~grams.of.sugars,data=cereal)
+summary(sugar.lm)
+
+calories.lm<-lm(Rating.of.cereal~calories.per.serving,data=cereal)
+summary(calories.lm)
+```
+- What do we conclude based on the $R^2$? 
+\vspace{1in}
+
+`r colorize("*The association between sugar and rating is stronger than the association between calories and rating.*", "blue")`
+
+
+- What does it mean that the sum of the $R^2$ for the two individual models is greater than one?
+
+`r colorize("*There is some covariation between our two explanatory variables. i.e. some of the variation explained by sugar is jointly explained by calories.*", "blue")`
+
+
+#### Two-variable model
+(@) What is the mathematical model that helps us answer the research question? 
+\vspace{1in}
+
+`r colorize("*Multiple regression model*", "blue")`
+
+
+(@) What is a key advantage to analyzing the two variables simultaneously? 
+\vspace{1in}
+
+`r colorize("*Reduces the unexplained variation.*", "blue")`
+
+```{r}
+# Figure 5.1.5: Two-variable regression model fits a plane of predicted values (cereal rating)
+
+both.lm <- lm(Rating.of.cereal~grams.of.sugars+calories.per.serving,data=cereal)
+summary(both.lm)
+```
+
+(@) What are our conclusion based on the p-values? How do we interpret coefficients?
+\vspace{1in}
+
+`r colorize("*The model that includes both variables is significantly better than using the single mean model. We are now accounting for 67.76% of the variation in ratings.*", "blue")`
+
+`r colorize("*Sugar is significantly associated with rating. Predicted rating will decrease by 1.71 points with one gram increase in sugar per serving holding calories constant.*", "blue")`
+
+`r colorize("*Calories is significantly associated with rating. Predicted rating will decrease by 0.21 points with one calorie increase per serving holding sugar constant.*", "blue")`
+
+`r colorize("*The intercept of 84.11 is the predicted average rating when sugar and calories are both zero (nonsense!).*", "blue")`
+
+
+**Key idea: If you have a balanced, factorial design, even with quantitative explanatory variables, the slope coefficients in the two-variable model will be the same as in the one-variable models because you have designed the study so that there is no association between the explanatory variables. However, this is not the case in this example since we have an observational study.**
+
+
+#### Two-variable model with standardized factors
+(@) Can we look at the $\hat{\beta_1}$ and $\hat{\beta_2}$ and deduce which factor has more of an effect on predicted rating? Why or why not? 
+\vspace{1in}
+
+`r colorize("*The factors are on different scales so we cannot compare them directly.* ", "blue")`
+
+
+- What do we need to do to the factors so that we can look directly at the magnitude of the slope coefficients to determine which variable has more of an effect on percentage peroxide. 
+\vspace{1in}
+
+`r colorize("*Standardize.*", "blue")`
+
+
+- How do we standardize? 
+\vspace{1in}
+
+`r colorize("*To standardize a variable we subtract the mean and divide by the standard deviation. Each standardized variable will have a mean of zero and a standard deviation of one.*", "blue")`
+
+
+- Will this mess up the strength of the associations with the response? 
+\vspace{1in}
+
+`r colorize("*Standardizing the two variables has done nothing to change the strength of the associations with the response variable.* ", "blue")`
+
+
+- What is added advantage of standardizing quantitative variables? 
+\vspace{1in}
+
+`r colorize("*We can get a more meaningful intercept that is guaranteed to be in the middle of your data, rather than involving extrapolation or nonsensical values).*", "blue")`
+
+- Standardise the data. Provide a scatter plot of the regular and standardized data. 
+```{r}
+cereal_std = cereal %>%
+  mutate_at(list(~scale(.)), .var = vars(grams.of.sugars, calories.per.serving))
+
+# plot regular and standardized data
+cereal %>% ggplot(aes(x=calories.per.serving, y=grams.of.sugars)) + 
+  geom_point() + 
+  expand_limits(x = 0, y = 0)
+
+cereal_std %>% ggplot(aes(x=calories.per.serving, y=grams.of.sugars)) + 
+  geom_point()
+
+std.lm<-lm(Rating.of.cereal~grams.of.sugars+calories.per.serving,data=cereal_std)
+summary(std.lm)
+
+#must calculate to fully interpret coefficients
+cereal %>% select(grams.of.sugars, calories.per.serving) %>% 
+  summarise_all(list(~mean(.), ~sd(.)))
+```
+
+- Fit the model with the standardized variables.
+```{r}
+std.lm<-lm(Rating.of.cereal~grams.of.sugars+calories.per.serving,data=cereal_std)
+summary(std.lm)
+
+#must calculate to fully interpret coefficients
+cereal %>% select(grams.of.sugars, calories.per.serving) %>% 
+  summarise_all(list(~mean(.), ~sd(.)))
+
+```
+
+(@) What are our conclusion based on the p-values? How do we interpret coefficients?
+\vspace{1in}
+
+`r colorize("*The model that includes both variables is significantly better than using the single mean model. Note that this has not changed compared to the model with the unstandardized variables, which is what we expected.*", "blue")`
+
+`r colorize("*The intercept is the predicted rating when sugar is 6.92 grams (its mean value) and when calories is 106.88 per serving (its mean value) OR when when both the standardized variables are 0*", "blue")`
+
+`r colorize("*Sugar is significantly associated with rating (unchanged). Predicted rating will decrease by 7.62 points for each one standard deviation increase in sugar (about 4.44 grams) when calories per serving constant (calories per serving constant = calories per serving mean = 106.88 calories per serving). OR Predicted rating will decrease by 7.62 points for each unit increase in standardized sugar when holding standardized calories = 0.*", "blue")`
+
+`r colorize("*Calories significantly associated with rating (unchanged). Predicted rating will decrease by 5.38 points with each standard deviation increase in calories per serving (about 19.48) when holding sugar constant (sugar constant = sugar mean = 6.92 grams of sugar). OR Predicted rating will decrease by 5.38 points for each unit increase in standardized calories when holding standardized sugar = 0.*", "blue")`
+
+
+**Key idea: Remember, all relationships or associations are not correlations. The authors note that if we also standardized the response variable, then the standardized slope coefficients would be equal to the correlation coefficients for the adjusted variables.**
+
+(@) To see if this is a good model, we of course have to check the validity conditions. What are they? Do we have any concerns?
+
+```{r fig.height=3, fig.width=5,fig.align="center"}
+resid_panel(std.lm, plots = c("hist", "resid"))
+```
+
+`r colorize("*The residuals vs. predicted values plot does show some patterns to that suggest an interaction model may be appropriate.*", "blue")`
+
+
+#### Interaction model
+
+(@) What does an interaction between two quantitative variables mean?  
+\vspace{1in}
+
+`r colorize("*The slope of one explanatory variable changes by a fixed amount as the other explanatory variable value changes.*", "blue")`
+
+
+```{r}
+inter.lm<-lm(Rating.of.cereal~grams.of.sugars*calories.per.serving,data=cereal_std)
+summary(inter.lm)
+```
+
+*Key idea: An additional advantage to standardizing variables is the interaction product variable will not be linearly related to either variable involved in the interaction. In other words, the coefficient of determination is additive.*
+
+How can we test whether a model with an interaction is preferable to the two-variable model? 
+\vspace{1in}
+
+`r colorize("*Using the ANOVA (since these models are nested. We'll assume that the validity conditions are satisfied.).*", "blue")`
+
+```{r}
+anova(std.lm,inter.lm)
+```
+
+(@) What are our conclusion based on the p-values? 
+\vspace{1in}
+
+`r colorize("*From the F-statistic and p-value we see that the interaction model is significantly better than the model without the interaction term.*", "blue")`
+
+
+
+(@) Let's check the validity conditions for the interaction model.
+```{r fig.height=3, fig.width=5,fig.align="center"}
+resid_panel(inter.lm, plots = c("hist", "resid"))
+```
+\vspace{1in}
+
+
+
+(@) Let's plot the data in a 3D scatter-plot:
+
+```{r, include=FALSE, eval=FALSE}
+library(plotly)
+
+cereal.int = cereal_std %>% 
+  mutate(cals = as.vector(calories.per.serving),
+         sugar = as.vector(grams.of.sugars),
+         fitted = as.vector(predict(std.lm, newdata = .)),
+         fittedint = as.vector(predict(inter.lm, newdata = .)) )
+
+plot_ly(x=cereal.int$cals, y = cereal.int$sugar, z=cereal.int$fitted, type = "scatter3d", mode="markers", size=1)
+plot_ly(x=cereal.int$cals, y = cereal.int$sugar, z=cereal.int$Rating.of.cereal, type = "scatter3d", mode="markers", size=1)
+
+fig <- plot_ly() %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$Rating.of.cereal,
+            type = "scatter3d", 
+            mode="markers",color='LightSkyBlue', size=1) %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$fitted,
+            type = "scatter3d", 
+            mode="markers",color='MediumPurple', size=2)
+fig.int <- plot_ly() %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$Rating.of.cereal,
+            type = "scatter3d", 
+            mode="markers",color='LightSkyBlue', size=1) %>% 
+  add_trace(x=cereal.int$cals, 
+            y = cereal.int$sugar, 
+            z=cereal.int$fittedint,
+            type = "scatter3d", 
+            mode="markers",color='MediumPurple', size=2)
+
+fig
+fig.int
+
+```
+
+
+
+
+

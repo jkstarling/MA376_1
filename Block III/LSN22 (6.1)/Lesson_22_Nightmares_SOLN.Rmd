@@ -1,0 +1,342 @@
+---
+title: "Lesson 22 Sleep and Nightmares (6.1)"
+author: "LTC J. K. Starling"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+# `r colorize("....", "blue")`  # use this to color text
+```
+
+#### Background
+
+In a 2003 study in the Journal of Sleep and Hypnosis, researchers were interested in whether the side a person slept on impacted the dreams that they experienced and if they had nightmares. Researchers selected participants who fell asleep and awoke on one side and who could remember their dreams. They found 63 participants, of whom 41 were right- side sleepers and 22 were left-side sleepers. The researchers would like to determine if a larger proportion of left side sleepers had nightmares than right side sleepers. The data set `nightmares.csv` contains the reported side a participant woke up on and whether or not they experienced a nightmare.
+
+```{r}
+# Load packages
+library(tidyverse)
+ 
+### Data management
+nightmare <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/nightmares.csv", 
+                      header=T, 
+                      stringsAsFactors = TRUE)
+
+# setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons_AY23-1/Block III/LSN22 (6.1)/")
+# nightmare <- read.csv("nightmares.csv", header = TRUE, stringsAsFactors = TRUE)
+```
+
+
+(1) What are our  hypotheses (in words)? What is our explanatory/response variable?  What type of data are we dealing with for the explanatory/response variables? 
+
+
+`r colorize("$H_0:$ The side you sleep on makes no difference in the probability of an individual having a nightmare or, there is no association between side slept on and whether or not the individual has a nightmare.", "blue")`
+
+`r colorize("$H_a:$ The side you sleep on impacts the likelihood of having a nightmare, i.e., there is a difference in the probability of an individual having a nightmare based on the side they slept on.", "blue")` 
+
+`r colorize("explanatory: side person sleeps on (categorical); response: remembered nightmare (categorical/binary)", "blue")` 
+
+\vspace{0.5in}
+
+
+(2) How are the types of data different than what we have dealt with before? What is statistical model we will deal with now? 
+
+`r colorize("explanatory: side person sleeps on (categorical); response: remembered nightmare (categorical)", "blue")`  
+
+$Y_{ij} \sim \mbox{Bern}(\pi_i)$, $i$ is the group/category, $j$ is the observation. 
+
+\vspace{0.5in}
+
+
+(3) A common way to depict data for this sort of study is using a 2 x 2 contingency table. 
+
+The order of the contingency table matters. Make sure you place the explanatory variable (groups) on the x-axis (columns) and the response variable (success/failure) on the y-axis.
+
+What is success in this case?
+
+```{r}
+T1 <- table(nightmare$Nightmare, nightmare$Side)
+T1
+```
+
+`r colorize("We define success as having a nightmare in this instance.", "blue")`
+\vspace{0.5in}
+
+
+#### Drawing inferences beyond the data
+
+We have several tests that we can use to draw inferences beyond the data.
+
+
+#### Choice 1: Two-sample z test (Difference in Proportions)
+
+(4) What is the parameter of interest?
+
+$\pi_{left}-\pi_{right}$ 
+\vspace{0.5in}
+
+(5) Write the hypotheses in symbols.
+
+$H_0:\pi_{left}-\pi_{right} = 0$
+
+$H_a:\pi_{left}-\pi_{right} \neq 0$
+\vspace{0.5in}
+
+
+(6) What is the statistic? Calculate it here using the table above. 
+
+```{r}
+phat_left <- T1[2,1] / sum(T1[,1])
+phat_right <- T1[2,2] / sum(T1[,2])
+phat_dif <- phat_left-phat_right
+c(phat_left, phat_right, phat_dif)
+
+prop.table(T1,2)
+```
+
+`r colorize("The difference in the conditional proportions. ", "blue")`
+$\hat{p}_{left}-\hat{p}_{right}$
+
+\vspace{0.5in}
+
+
+(7) How rare is this under $H_0$? We can use our shuffling simulation strategy to estimate:
+
+```{r}
+set.seed(376)
+
+M <- 5000
+results <- data.frame(stat = rep(NA,M))
+
+for(i in 1:M){
+  nm.mod <- nightmare %>% mutate(shuff.cat = sample(Side))
+  my.table <- table(nm.mod$Nightmare, nm.mod$shuff.cat)
+  p.tabl <- prop.table(my.table,2)
+  results$stat[i] <- p.tabl[2,1] - p.tabl[2,2]
+}
+
+results %>% ggplot(aes(x=stat)) + geom_histogram()+
+  geom_vline(xintercept = phat_dif, lwd = 2, color = "red")
+
+sum(results$stat >= phat_dif) / M
+```
+
+`r colorize("It is rare. Only 3.36% of the examples were more extreme.  ", "blue")`
+
+\vspace{0.25in}
+
+
+(8) We can use the normal distribution as our reference distribution in a theory based test provided we have at least 10 successes and 10 failures **in each group**. If that is the case we can say that the CLT has kicked in and we use the two-sample z-test.
+
+Conduct the 2-sample z-test below and create a 95% CI for the difference in proportions:
+```{r}
+### Theory-based approach
+## 2-sample z - test for equality of proportions
+n_left <- sum(T1[,1]) 
+n_right <- sum(T1[,2]) 
+phat <- sum(T1[2,])/ sum(T1)
+
+z <- (phat_dif)/sqrt(phat*(1-phat)*(1/n_left + 1/n_right))
+2*(1-pnorm(abs(z)))                 # Ha two-sided
+
+# Confidence interval
+se <- sqrt( ( phat_left*(1-phat_left)/n_left) + ((phat_right*(1-phat_right))/n_right) )
+multiplier <- qnorm(.975)
+
+c((phat_dif)-multiplier*se , (phat_dif)+multiplier*se)
+```
+
+
+
+
+#### Choice 2: Chi-square test
+
+**The statistic**:
+$$\small \chi^2 = \sum_{Cells} \frac{(Obs-Exp)^2}{Exp}$$
+where the Observed are the values in the contingency table and the Expected values are calculated from what we would have expected to get in each cell if $\pi_{left}=\pi_{right}$ (if the null hypothesis was true).
+
+(9) Assuming the null hypothesis is true, use the overall proportion of success you found earlier to calculate the expected values for the 2 x 2 table below.
+
+```{r}
+# Number of left side sleepers who have/do not have nightmares
+c(n_left*phat, n_left*(1-phat))
+
+# Number of right side sleepers who have/do not have nightmares
+c(n_right*phat, n_right*(1-phat))
+```
+
+
+(10) How many left-side (right-side) sleepers do we expect to have/not have nightmares? 
+
+`r colorize("So, if $H_0$  is true, we expect, out of 22 people given who sleep on the left side, $22 \times hat{p}$, or 7.33 to have nightmares, and 14.67 not to have nightmares.", "blue")`
+
+`r colorize("Out of the 41 people who sleep on their right side, we would have expected $ 41 \times hat{p} = 13.67$ to have nightmares and 27.33 to not have nightmares.", "blue")`
+
+\vspace{0.5in}
+
+
+(11) For the theory-based approach we compare the statistic to our reference distribution which is the $\small \chi^2$ distribution with $\small (r-1)(c-1)$ degrees of freedom, where r is the number of rows and c is the number of columns in the contingency table, provided we have at least 10 observations **in each cell**. Calculate the degrees of freedom for this example:  
+
+`r colorize("df = (2-1)(2-1) = 1.", "blue")`
+
+\vspace{0.25in}
+
+(12) Calculate the $\chi^2$ statistic and p-value. 
+
+```{r}
+NM <- data.frame(L=c(11,11), 
+                 R=c(31,10), 
+                 row.names = c("no","yes"))
+EXP <- data.frame(L=c(n_left*(1-phat),n_left*phat), 
+                  R=c(n_right*(1-phat),n_right*phat), 
+                  row.names = c("no","yes"))
+NM
+EXP
+my.chisq <- sum( (NM-EXP)^2 / EXP)
+my.chisq
+pchisq(my.chisq, 1, lower.tail = FALSE)
+pchisq(z^2, 1, lower.tail = FALSE)
+```
+
+
+```{r}
+## Chi-square test (same as z test for two sample proportions)
+# my.table <- table(nightmare$Nightmare,nightmare$Side)   # Variable order matters; don't use this one!
+T2 <- table(nightmare$Side,nightmare$Nightmare)  # use this one!
+pptest <- prop.test(T2,correct = FALSE)
+pptest
+```
+
+(13) What do you notice about the value for $z$ from the two-sample z-test and the value for $\chi^2$?
+1
+**$z^2 \approx \chi^2$**
+
+\vspace{0.5in}
+
+
+#### Choice 3: Relative Risk Ratio (Ratio of two proportions)
+
+Used especially for rare diseases. This is because, as your book points out, if you are working with a rare disease and you find that the incidence rate increases from 1% to 2%, this is a difference of only one percentage point, but it represents a doubling of the rate (a 100% increase).
+
+
+(14) **The statistic**: How do we calculate and interpret the RR? Ratio of conditional proportions of success $\frac{\hat{p}_{left}}{\hat{p}_{right}}$ with the larger proportion in the numerator for ease of interpretation,i.e., how many times the conditional proportion of success is larger in one group compared to the other. Under $\small H_0$ there is no difference in the proportion of successes between groups. What is the relative risk in this situation? 
+
+`r colorize("When the conditional proportions of interest are the same for both (all) groups, the value for RR will be 1.", "blue")`
+
+\vspace{0.5in}
+
+(15) Calculate the relative risk ratio below and interpret the result. 
+```{r}
+## Relative risk ratio
+phat_left/phat_right
+```
+`r colorize("The value of 2.05 means that the conditional proportion of a nightmare (success) in the left-side sleepers is 2.05 times more likely than the right-side sleepers. This represents a 100% x (2.05 - 1) = 105% increase. ", "blue")`
+
+\vspace{0.5in}
+
+
+(16) What are some issues with having a theory based approach with the relative risk ratio? 
+
+`r colorize("We really want to be cautious here because if we look at the null distribution for the simulation we would see that it looks kinda sort of normal but there is a bit of a right skew. Other issues with RR. Like we mentioned before, 'success' is arbitrarily decided. If we flipped it around in this scenario so that success was 'not having a nightmare' it would seem that nightmares are more prevalent if the subject sleeps on their right side. This is not the interpretation that we would necessarily want to give.", "blue")`
+
+\vspace{0.5in}
+
+
+#### Choice 4: Odds Ratio
+
+(17) **The statistic**: Yet another statistic (that we will see is quite useful in some cases) is the odds ratio. 
+
+- The odds ratio is formed by comparing the odds of success from group 1 to the odds of success from group 2. So from our data set, we compute the odds of success for subjects who sleep on their left and those that sleep on their right, and then use those odds to calculate the odds ratio. Odds are $p/1-p$ where $p$ is a proportion or probability. 
+
+- In English it is common to use probability and odds interchangeably but they are NOT the same. 
+
+- Calculate the odds ratio for our nightmare dataset and interpret the results. 
+
+```{r}
+## Odds ratio
+odds_left <- T1[2,1]/T1[1,1]       # Odds of having a nightmare sleeping on the left side  
+odds_right <- T1[2,2]/T1[1,2]       # Odds of having a nightmare sleeping on the right side.
+OR <- odds_left/odds_right
+c(odds_left, odds_right, OR)
+```
+ 
+\vspace{0.25in}
+ 
+ 
+(18) How rare is this under $H_0$? We can use our shuffling simulation strategy to estimate:
+
+```{r}
+set.seed(376)
+
+M <- 5000
+results <- data.frame(stat = rep(NA,M))
+
+for(i in 1:M){
+  nm.mod <- nightmare %>% mutate(shuff.cat = sample(Side))
+  my.table <- table(nm.mod$Nightmare, nm.mod$shuff.cat)
+  p.tabl <- prop.table(my.table,2)
+  odds.sim.left <- p.tabl[2,1] / p.tabl[1,1]
+  odds.sim.right <- p.tabl[2,2] / p.tabl[1,2]
+  results$stat[i] <- odds.sim.left / odds.sim.right
+}
+
+results %>% ggplot(aes(x=stat)) + geom_histogram()+
+  geom_vline(xintercept = OR, lwd = 2, color = "red")
+
+sum(results$stat >= OR) / M
+```
+ 
+ \vspace{0.25in}
+ 
+ 
+(19) Under the null hypothesis $\small H_0$ (there is no difference in the proportion of successes between groups), what should the the Ratio between `Odds_left/odds_right` be equal to? 
+
+`r colorize("The odds ratio should be equal to one under the null hypothesis.", "blue")`
+
+\vspace{0.5in}
+
+
+(20) In order to use a theory based test involving Odds, it turns out that it often times is better to use log-Odds.  Though harder to interpret. The OR is generally symmetric, it turns out that log-Odds converges super quickly under the CLT to a normal distribution, which makes life really nice.
+
+Next lesson we will continue to use log-odds as a statistic.  Our statistical model will called a logistic regression model. This can be fit in R using an extremely flexible class of models known as a Generalized Linear Models.   
+
+```{r}
+nightmare <- nightmare %>% mutate(nite.bin = ifelse(Nightmare == "Yes", 1, 0))
+my.glm <- glm(nite.bin ~ Side, data = nightmare, family = "binomial")
+summary(my.glm)
+
+my.glm.coefs <- coef(my.glm)
+my.glm.coefs
+exp(abs(my.glm.coefs[1]))
+exp(sum(my.glm.coefs))
+```
+
+
+`r colorize("The log-odds of someone who had nightmares and slept on the Left side is ~0; the odds are $exp(0) = 1$. ", "blue")`
+
+`r colorize("The log-odds of someone who had nightmares and slept on the right side is (0 + -1.13) = -1.13; the odds are $exp(0  -1.13) = 0.32258$. ", "blue")`
+
+\vspace{0.5in}
+
+
+(21) What is the statistical model we are considering now? 
+
+
+\vspace{0.5in}
+

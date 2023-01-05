@@ -1,0 +1,256 @@
+---
+title: "Lesson 16 Pizza."
+author: "by LTC J. K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+
+#### Background:
+A consumer organization rated various frozen pizzas on taste. The results are in the file Pizza.csv where the Rating is out of 100 (higher is better), the Calories are per serving, the Fat is in grams per serving, and the Pepperoni variable indicates whether there was pepperoni on the pizza (0-No; 1-Yes).
+
+```{r Setup, message=FALSE,warning=FALSE}
+# Load packages
+library(tidyverse)
+library(ggResidpanel)
+
+# pizza.dat <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/Pizza_w_pepp.csv", stringsAsFactors = TRUE)
+setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN16/")
+pizza.dat <-read_csv("Pizza_w_pepp.csv")
+# glimpse(pizza.dat)
+
+# Change categorical variables to 'factors'
+pizza.dat <- pizza.dat %>% mutate(Pepperoni = as.factor(Pepperoni))
+```
+
+#### Step 1: Ask a research question.
+
+`r colorize("What factors are associated with pizza taste rating?", "blue")`
+
+
+#### Step 2: Design a study and collect data.
+(@) Is this study an observational study or a randomized experiment? Explain.
+\vspace{0.5in}
+
+`r colorize("Observational study; we are not randomizing observations to experimental groups.", "blue")`
+
+
+#### Step 3: Explore the data
+
+(@) Create individual plots to explore the association between taste rating and each explanatory variables.
+```{r pictures}
+pizza.dat %>% ggplot(aes(x=Fat, y=Rating, color=Pepperoni)) + geom_point()
+
+pizza.dat %>% ggplot(aes(x=Fat, y=Calories, color=Pepperoni)) + geom_point()
+
+# pizza.dat %>% ggplot(aes(x=Calories, y=Rating, color=Lowcal)) + geom_point()
+
+```
+
+#### Step 4: Draw inferences beyond the data
+
+
+<center> **Multiple-Means Models** </center>
+
+Up until now we have been using statistical models of the form:
+
+$$\hat{y}_{ij} = \mu_j \,\, \text{ or } \,\, \hat{y}_{ij} = \mu + \alpha_{j}$$
+In the multiple means examples we have looked at, our explanatory variable, or independent variable have been categorical.  This was nice in that we could think of each of our observations as belonging to a group - one level of the categorical variable. We considered whether there was an association between the response variable and the explanatory variable.
+
+In this section, you will continue to focus on using one explanatory variable to explain variation in a response variable; however, the explanatory variable will be quantitative and we will consider whether the means of the response variable distributions at different values of the explanatory variable tend to follow a linear pattern (i.e., a constant rate of change). 
+
+But first... let's create a factor in the pizza.dat dataframe to account for those servings that are considered low-calorie. Label those servings with with less than or equal to 335 calories as 'low' and those greater than 335 calories as `high'. 
+\vspace{0.5in}
+
+```{r lowcalorie}
+pizza.dat$Lowcal <- as.factor(ifelse(pizza.dat$Calories <=335, 'low', 'high'))
+```
+
+
+(@) Create a multiple-means model with `Lowcal` as the explanatory variable and `Rating` as the response variable. Show the summary and anova table. 
+\vspace{0.5in}
+
+```{r}
+lowcal.lm <- pizza.dat %>% lm(Rating~Lowcal, data = .)
+summary(lowcal.lm)
+anova(lowcal.lm)
+```
+
+(@) Interpret your results. 
+\vspace{0.5in}
+
+
+
+<center> **Simple Linear Regression Models** </center>
+
+Consider the following linear regression model (indicator coding).
+
+$$y_i = \beta_0 + \beta_1 \text{x}_1 + \epsilon_i \quad \epsilon_i \sim \text{Normal}(0,\sigma^2)$$
+- Interpret $\beta_1$ in the model.
+\vspace{0.5in}
+
+ 
+- Interpret $\beta_0$ in the model.
+\vspace{0.5in}
+
+
+
+**Fit a simple linear regression model for predicting Rating taking into account the number of calories per serving (use indicator coding).**
+
+(@) Interpret the coefficient/estimate for Calories. Is there evidence of a significant association between Calories and Rating? 
+\vspace{0.5in}
+
+```{r Calories, message=FALSE, warning=FALSE, out.width='60%'}
+calories.lm <- lm(Rating ~ Calories, data=pizza.dat)
+summary(calories.lm)
+anova(calories.lm)
+```
+
+`r colorize("For each extra calorie, predicted taste rating increases by 0.133 points. A p-value = 0.237 suggests that this is not a significant association at the 0.05 significance level.", "blue")`
+
+
+(@) How does this model compare to the multiple-means model we made above? 
+\vspace{0.5in}
+
+
+
+(@) Are the validity conditions for the theory-based test satisfied?
+
+- L  `r colorize(": Linearity - the residuals vs. predicted values graph does not show any strong evidence of curvature or other patterns.", "blue")`
+- I `r colorize(": Independence - the responses can be considered independent of each other.", "blue")`
+- N `r colorize(": Normality - the histogram of residuals is approximately symmetric with no large outiers.", "blue")`
+- E `r colorize(": Equal Variance - the residuals vs. predicted values graph shows a constant with.", "blue")`
+ 
+```{r Calories2, message=FALSE, warning=FALSE, out.width='60%'}
+resid_panel(calories.lm, plots = c('hist', 'resid'))  # Validity conditions
+```
+\vspace{0.5in}
+
+
+
+**Fit a simple linear regression model for predicting Rating taking into account the amount of fat per serving (use indicator coding).**
+
+(@) Interpret the coefficient for Fat. Calculate and interpret a 95% confidence interval for the estimate of the slope for Fat.  Is there evidence of a significant association between Fat and Rating? 
+\vspace{0.5in}
+
+```{r Fat, message=FALSE, warning=FALSE}
+fat.lm <- lm(Rating ~ Fat, data=pizza.dat)
+summary(fat.lm)
+confint(fat.lm)
+```
+
+`r colorize("For each extra gram of fat, predicted taste rating increases by 0.397 points. XXX.", "blue")`
+
+
+
+**Fit a simple linear regression model for predicting Rating taking into account whether or not there is pepperoni on each slice (use indicator coding).**
+
+```{r Pepperoni, message=FALSE, warning=FALSE}
+pepperoni.lm <- lm(Rating ~ Pepperoni, data=pizza.dat)
+summary(pepperoni.lm)
+```
+(@) Interpret the coefficient for Pepperoni. Is there evidence of a significant association between Pepperoni and Rating? What percent of the variation in Rating can be explained by Pepperoni? 
+\vspace{0.5in}
+
+`r colorize("Pizza that has pepperoni tends to have a rating of 3.673 points lower. The R2 =0.7%.", "blue")`
+
+
+
+(@) Is it accurate to say that the relationship between Calories and Rating is causal. Why or why not? 
+\vspace{0.5in}
+
+`r colorize("No it is not causal. Fat may confound the relationship between Calories and Rating.", "blue")`
+
+`r colorize("Key idea:", "red")` Because fat is a potentially confounding variable we can either 1) adjust the rating values by fat OR 2) adjust the calories values for fat. The key idea is that in an observational study adjusted associations  may be different than the unadjusted association (coefficients may change). Recall that an advantage of a balanced factorial designed experiment is that the adjusted and unadjusted associations are the same (coefficients do not change). 
+
+
+ 
+
+
+<center> **Multiple Linear Regression Models** </center>
+
+Consider the two-variable linear regression model (indicator coding).
+
+\[\small \text{y}_i = \beta_0 + \beta_1 \text{x}_1 + \beta_2 \text{x}_2 + \epsilon_i \quad \epsilon_i \sim \text{Normal}(0,\sigma^2)\]
+
+- Interpret $\beta_1$ in the model.
+\vspace{0.5in}
+
+- Interpret $\beta_2$ in the model.
+\vspace{0.5in}
+
+
+**Fit the two-variable (multiple) linear regression model with Fat and Calories (indicator coding).**
+
+```{r Two-variable model2 (indicator coding), message=FALSE,warning=FALSE}
+two.var <-lm(Rating ~ Calories + Fat, data=pizza.dat)
+summary(two.var)
+
+```
+
+(@) What proportion of the variation in Rating can be explained by Calories after adjusting for Fat? Is this more than without adjusting for Fat?
+  \vspace{0.5in}
+
+  `r colorize("18.1%. It is more than without adjusting for Fat.", "blue")`
+
+
+(@) Let us assume the validity conditions for the theory-based test are satisfied (they really are not, we should simulate!), what conclusions can we make about the *model*? Be sure to provide evidence to support your conclusions.
+\vspace{0.5in}
+
+```{r twovar2, message=FALSE, warning=FALSE, out.width='60%'}
+resid_panel(two.var, plots = c('hist', 'resid'))  # Validity conditions
+```
+
+
+(@) What does the coefficient on Calories mean in context? Is this a significant association? 
+\vspace{0.5in}
+
+`r colorize("For each extra calorie, predicted taste rating increases by 0.752 after adjusting for fat. i.e. if we keep fat at a fixed value the regression equation predicts that taste rating will increase if we increase calories.", "blue")`
+
+(@) What does the coefficient on Fat mean in context? 
+\vspace{0.5in}
+
+`r colorize("For each extra gram of fat, predicted taste rating goes down by 4.51 points after adjusting fror calories, i.e. if we keep the calories at a fixed value the regression equation predicts that taste rating will decrease with increased fat.", "blue")`
+
+
+(@) Calculate and interpret a 95% confidence interval for the coefficient for Calories. 
+\vspace{0.5in}
+
+```{r confint, message=FALSE,warning=FALSE}
+confint(two.var) 
+```
+
+`r colorize("The true coefficient for calories is between 0.09 and 1.41, with 95% certainty.(Statistically significant)", "blue")`
+
+
+**Fit the two-variable (multiple) linear regression model with Calories and Pepperoni (indicator coding).**
+```{r Two-variable model (indicator coding), message=FALSE,warning=FALSE}
+CalPepp.lm <-lm(Rating ~ Calories + Pepperoni, data=pizza.dat)
+summary(CalPepp.lm)
+
+confint(CalPepp.lm) 
+```
+
+(@) Interpret the coefficient for Calories and Pepperoni. Is there evidence of a significant association between the model and Rating? What percent of the variation in Rating can be explained by the model? 
+\vspace{0.5in}
+
+`r colorize(".....", "blue")`
+
+
+
+

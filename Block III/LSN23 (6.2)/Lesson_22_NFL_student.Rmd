@@ -1,0 +1,221 @@
+---
+title: "Lesson 22 NFL Field Goals"
+author: "LTC J.K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+# Load packages
+library(tidyverse)
+library(table1)
+
+### Data management
+#loading play by play for the 2021 season
+# library(nflfastR)
+# data <- load_pbp(2021)
+# field_goal <- data %>% filter(is.na(field_goal_result)!=T)
+
+
+# field_goal <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/fg_2021.csv",header=T, stringsAsFactors = TRUE)
+
+# setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN22/")
+# field_goal <- read.csv("fg_2021.csv", header = TRUE, stringsAsFactors = FALSE)
+```
+
+
+#### Background
+The 2021 NFL Season had seen some historically bad weeks for the field goal kickers. In this lesson we will look at the relationship between kick distance and and field goal result, and the relationship between field surface and field goal result as part of the model building process.
+
+
+(1) Explore the variables `field_goal_result` and `surface` using the `table()` command. What do you notice? Can we simplify the data? (ask for the email...)
+\vspace{1in}
+
+```{r}
+ 
+```
+
+
+```{r}
+
+```
+
+
+(2) Create a contingency table using the `table1()` command.
+\vspace{1in}
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Contingency table
+ 
+```
+
+
+
+(3) Calculate the odds ratio comparing field goals attempted on turf and field goals attempted on grass? 
+\vspace{1in}
+```{r}
+ 
+```
+
+(4) How do we interpret the odds ratio? 
+\vspace{1in}
+
+
+
+(5) What if I wanted the odds ratio between field goals attempted on grass and field goals attempted on turf, how do I calculate and interpret it? 
+\vspace{1in}
+```{r}
+
+```
+
+
+
+#### Logistic Regression Model
+To be able to adjust for the field surface we need some type of model. Because we have a binary response we will use the logistic regression model. The logistic regression model is a linear equation that takes the form:
+$$\small  logit(\pi_i) = ln\left(\dfrac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 x_i $$
+where log odds are linearly related to $\small x$ (if we graph $\small \pi$ and $\small x$ they are related in the S-shaped curve.) **Notice we do not have an error term in the logit model. This is because we are not modelling individual values of the response variable.**
+
+I am assuming that you are familiar with logs with base $e$, where $e$ represents Euler's constant of approx 2.718. R uses base log base $e$ by default when you use the *log* function.
+
+The model estimate is: 
+
+$$\small  \text{Predicted log odds} = logit(\hat{p}_i) = ln\left(\dfrac{\hat{p}_i}{1-\hat{p}_i}\right) = b_0 + b_1 x_i$$
+With this model we can estimate the probability of success $\small\pi$ (estimated proportion of success) by following the rules of logs and exponents.
+
+$$\small  exp\left[ln\left(\dfrac{\hat{p}_i}{1-\hat{p}_i}\right)\right]  = exp \left[b_0 + b_1 x_i\right] \\
+\small \dfrac{\hat{p}_i}{1-\hat{p}_i} = exp\left[b_0 + b_1 x_i\right]\\
+\small \hat{p}_i = \dfrac{exp\left[b_0 + b_1 x_i \right]}{1+ exp\left[b_0 + b_1 x_i \right]}$$
+
+
+(6) We conduct inference on our coefficients as usual. What are the null and alternative hypotheses? How will we know if the coefficient is statistically significant?
+\vspace{1in}
+
+
+
+
+(7) How do we get the odds ratios given the log odds? 
+\vspace{1in}
+
+
+
+(8) Our hypotheses are: $$\small H_0: OR = 1 \text{ vs } H_A: OR \neq 1$$
+- Confidence interval containing the null value indicates that the estimate is not statistically significant. So if we are dealing with OR, when do we have a statistically significant result?  
+\vspace{1in}
+
+
+ 
+ 
+#### Categorical Explanatory Variable
+(9) Fit the model with the binary explanatory variable that indicates whether or not the the field goal was attempted on turf or grass. (remember to check the levels of the **surface** variable with the function `contrasts()`)
+\vspace{1in}
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# contrasts(...)
+# surface.glm <- ...
+# summary(surface.glm)
+# coef(surface.glm)                # Predicted log odds of making the field goal
+# confint(surface.glm)
+```
+
+(10) How do we interpret the coefficients directly from the model? What conclusions can we draw based on the confidence interval?
+\vspace{1in}
+
+
+
+(11) Typically these interpretations don't make much sense to the consumer; how do we write them and interpret them in terms of odds ratio? What conclusions can we draw based on the confidence interval? 
+\vspace{1in}
+
+```{r}
+
+```
+
+
+
+
+(12) What is the predicted probability of field goal attempted on grass? On turf?
+\vspace{1in}
+
+```{r}
+#On Grass
+
+#On Turf
+
+```
+
+
+
+
+<br>
+<br>
+
+
+#### Quantitative Explanatory Variable
+(13) Fit the model with the quantitative explanatory variable that captures kick distance.
+\vspace{1in}
+
+```{r echo=TRUE, fig.height=3, fig.width=3, message=FALSE, warning=FALSE, fig.align='center'}
+# distance.glm <- glm(...)
+# coef(distance.glm)                # Predicted log odds of survival
+# confint(distance.glm) 
+```
+
+
+(14) How do we interpret the coefficients directly from the model? What conclusions can we draw based on the confidence interval?
+\vspace{1in}
+
+
+
+
+(15) Typically these interpretations don't make much sense to the consumer; how do we write them and interpret them in terms of odds ratios? What conclusions can we draw based on the confidence interval?
+\vspace{1in}
+
+```{r}
+
+ 
+```
+
+
+
+
+(16) What is the predicted probability of making a field goal from 20 yards?  44 yards?  60 yards? What is the relationship between predicted probability and kick distance?
+\vspace{1in}
+
+```{r}
+# newobs.data <- data.frame(kick_distance = c(...))
+# 
+# predict.glm(...., type="response")
+# 
+# # Predicted probability (inverse logit)
+# distance.dat.sub <- fg %>% mutate(distance.pp = distance.glm$fitted.values)
+# #view(smoke.dat.sub)
+# distance.dat.sub %>% ggplot(aes(x=kick_distance, y=distance.pp) ) + 
+#   geom_point() +
+#   geom_line()+
+#   theme_classic()
+```
+
+
+
+
+<br>
+<br>
+
+In this lesson we looked at the relationship between field surface and making a field goal, and the relationship between kick distance and making a field goal as part of the model building process. Next week we will put it all together to answer a research question with a multivariate logistic regression model 
+<br>
+<br>
+
+#### References
+
+Nathan Tintle et al.(2019). Intermediate Statistical Investigations for U.S. Military Academy at West Point.

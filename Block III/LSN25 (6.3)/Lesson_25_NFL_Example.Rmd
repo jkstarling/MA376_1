@@ -1,0 +1,44 @@
+---
+title: "Lesson 25 NFL Field Goals Example with categorical variables (with # categories > 2)"
+author: "LTC J.K. Starling"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+
+```
+
+```{r}
+# Load packages
+library(tidyverse)
+
+field_goal <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/fg_2021.csv",header=T, stringsAsFactors = TRUE)
+
+fg <- field_goal %>% select(c(field_goal_result, surface))
+
+
+ind <- fg$field_goal_result == "blocked"
+fg$field_goal_result2[ind] <- "missed"
+
+fg <- droplevels(fg)
+
+```
+
+
+
+```{r}
+levels(fg$surface)
+fg.glm <- glm(field_goal_result ~ surface, data=fg, family = "binomial")
+summary(fg.glm)
+contrasts(fg$surface)
+```
+

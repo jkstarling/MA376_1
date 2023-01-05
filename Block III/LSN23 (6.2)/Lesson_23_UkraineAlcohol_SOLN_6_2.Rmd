@@ -1,0 +1,339 @@
+---
+title: "Lesson 23 Ukraine Alcohol Abuse (6.2)"
+author: "LTC J. K. Starling"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.width=12, 
+	fig.height=6
+)
+
+options(tinytex.verbose = TRUE)
+
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+# `r colorize("....", "blue")`  # use this to color text
+```
+
+
+```{r libraryload}
+library(tidyverse)
+library(GGally)
+library(boot)
+library(broom)
+
+```
+
+## Admin
+
+### Basic Laws
+
+
+$$
+\begin{aligned}
+e^{\ln x}       &= x    & \hspace{2.0in} 
+\ln(e ^ x) &= x     \\
+e^{x} \times e^s &= e^{x+s}   &  
+\ln(x \times y) &= \ln(x) + \ln(y); \qquad x, y > 0    \\
+\frac{e^x}{e^y} &= e^{x-y}  & 
+\ln(x/y)        &= \ln(x) - \ln(y); \qquad x, y > 0   \\
+(e^x)^y &= e^{x \times y}  & 
+\ln(x^y)        &= y \times \ln(x); \qquad x > 0  && \\
+\end{aligned}
+$$
+
+## Alcohol Abuse in Ukraine
+
+Researchers were interested in rates of alcohol abuse among men and women in Ukraine, investigating questions about whether rates differ depending on variables such as sex and age, and after adjusting for such potential confounding variables, how the rates may be related to exposure to different conflicts and traumas such as living near Chernobyl.
+Data collection took place from February-December 2002 across all 24 of Ukraine’s "states" and the republic of Crimea, using the World Mental Health-Composite International Diagnostic Interview (CIDI). The survey questions included enough information to make diagnoses of mental health disorders, including alcohol abuse, and demographic data such as sex and age. Respondents also answered the question, "Have you ever lived in the zone contaminated as a result of the Chernobyl accident?"
+
+```{r}
+cher.dat<-read.table("cherdata.txt", 
+                     header = T, 
+                     stringsAsFactors = T)
+```
+
+(1) Using the output from the `glimpse` and `summary` commands, what is the primary response variable? What are potential explanatory variables of interest?  Classify each as quantitative or categorical? 
+
+```{r}
+glimpse(cher.dat)
+summary(cher.dat)
+```
+
+`r colorize("response: alc.post (categorical)", "blue")`
+
+`r colorize("explanatory: live.chernobyl (categorical/binary); age (quantitative); sex (binary)", "blue")`
+
+\vspace{.25in}
+
+
+(2) What are some observations that we may want to remove? 
+
+`r colorize("We would want to remove those who were alcoholics before the event (The Chernobyl explosion happened in 1986). We should also consider removing the NA from the live.chernobyl variable.", "blue")`
+
+\vspace{.25in}
+
+
+(3) If we wanted to test the association between `alc.post` and `sex` how would we do it? 
+
+`r colorize("We could perform analysis on the difference of the proportions between male and females and whether or not they became alcoholics. This can be accomplished with a two-sample z-test or a chi-square test. Both of these can be accomplished simultaneously using the prop.test function in R.", "blue")`
+
+\vspace{.25in}
+
+
+(4) Do the recommendations from the previous two questions.  Is there an association between alcohol abuse and sex?
+
+-Remove those who were alcoholics \textit{before}  the Chernobyl accident in 1986. 
+```{r}
+sub.cher <- cher.dat %>% filter(alc.post !="before") %>% droplevels()
+```
+
+- Create a 2x2 contingency table for `alc.post` and `sex`. 
+```{r}
+sub.cher$alc.post <- fct_rev(sub.cher$alc.post) # reverse level order 
+levels(sub.cher$alc.post)
+
+cher.tab <- table(sub.cher$sex, sub.cher$alc.post)
+cher.tab
+```
+
+- Use the theory based approaches mentioned from the last section (\S 6.1).
+```{r}
+prop.test(cher.tab, correct = FALSE)
+
+# alternative w/o table command
+# x=c(62,257)
+# n=c(62+2853,257+1343)
+# prop.test(x,n,correct=FALSE)
+```
+
+`r colorize("Yes, there appears to be an assocation between alcohol abuse and sex based on our large chi-sq value with associated small p-value. ", "blue")`
+
+\vspace{.25in}
+
+
+(6)  What is the odds-ratio?
+
+```{r, include=FALSE}
+OR <- (257 / 1343) / (62/2853)
+OR
+
+p_f <- 62 / (62+2853)
+p_m <- 257/ (257+1343)
+(p_m / (1-p_m)) / (p_f / (1-p_f))
+```
+
+`r colorize("The odds ratio is 8.8, meaning that males have an 8.8 times higher odds of alcohol abuse than females.", "blue")`
+
+\vspace{0.5in}
+
+
+
+
+(7) What if we were interested in the association between `age` and `alc.post`?  Could we repeat our analysis from above?  What would we  have to do?
+
+`r colorize("The values for sex and alc.post were both categorical/binary so our analysis was rather easy. If we use age, we would have to discretize the ages to groups of years or even to each year. This would reduce our power, particularly if we use the chi-squared distribtion since we would 'use up' many degrees of freedom with a large number of categories. ", "blue")`
+
+`r colorize("Treating age as a quantitative response variable. Median age of the nonabusers is 50 compared to 33 for the abusers. There is a noticeable shift down in the age distribution of the alcohol abusers, likely leading to a small pvalue. We could use a twosample t-test to compare the means. ", "blue")`
+
+\vspace{0.5in}
+
+(8) Perhaps we want to take a model based approach.  Looking at the plot, are there issues using a linear model here?   
+
+
+```{r}
+sub.cher <- sub.cher %>% mutate(alc.bin = ifelse(alc.post=="yes",1,0))
+
+sub.cher %>% ggplot(aes(x=jitter(age),y=jitter(alc.bin))) + 
+  geom_point()+
+  stat_smooth(method="lm",se=FALSE,color="red",lwd=2)
+```
+`r colorize("The issues are that the results aren't linearly related. We even get a negative prediction value for ages above 60-ish.", "blue")`
+
+\vspace{0.25 in}
+
+
+
+(9) Explain what is going on with the following code and figure. Does this model also have any issues? 
+
+```{r}
+
+grouped.cher=sub.cher %>% group_by(age)%>%summarize(prop=mean(alc.bin))
+
+grouped.cher %>% ggplot(aes(x=age,y=prop))+geom_point()+
+  stat_smooth(method="lm",se=FALSE)
+
+```
+
+`r colorize("The code is grouping the percentage of alcohol abusers by each age and then plotting the values. This model is better as far as a linear relationship is concerned, but we still will have a negative results above the 75-ish age.", "blue")`
+
+\vspace{0.25 in}
+
+
+(10) Either way the linear fit is concerning and not appropriate to the data.  It may work better in this case, to fit a logistic regression.  A logistic regression model for our data is:
+
+$log(p/(1-p))=beta0+beta1\cdot agei$
+
+\vspace{0.25in}
+
+(11) The assumption, then, is we can fit a logistic curve through our data.  We can do this in R by: 
+
+```{r}
+cher.glm <- glm(alc.bin ~ age, data = sub.cher, family = "binomial")
+```
+
+To see the fit we can do:
+
+```{r}
+fitted.glm <- augment(cher.glm)
+
+fitted.glm %>% ggplot(aes(x = jitter(age),y = jitter(alc.bin))) +
+  geom_point() +
+  geom_line(aes(x = age,y = inv.logit(.fitted)), lwd=2, color="red")
+
+# ## OR 
+# fitted.glm %>% ggplot(aes(x = jitter(age),y = jitter(alc.bin))) +
+#   geom_point() +
+#   geom_line(aes(x = cher.glm$model$age,y = cher.glm$fitted.values), lwd=2, color="red")
+```
+Discuss the code:
+
+`r colorize("The augment command adds additional columns to the data. the .fitted provides the logit modified fitted values, so you have to use the inv.logit() function to print the probabilities.  ", "blue")`
+
+\vspace{0.15in}
+
+
+
+
+(12) R uses MLE to find the coefficients of our fitted model and can be displayed using the `coef` function. What is our fitted model? What does the intercept mean? Is there a way to make it more meaningful in our model? 
+
+```{r}
+coef(cher.glm)
+summary(cher.glm)
+```
+
+$predicted log-odds = log(p/(1-p))= -0.2234 -0.05707\cdot agei$
+
+`r colorize("We could make the explanatory variable (age - 17) so zero corresponds to the youngest person in the data set.", "blue")`
+
+\vspace{0.25in}
+
+
+
+(13) Calculate the predicted odds of someone age 50 of being diagnosed with alcohol abuse. 
+
+What is the probability that a person aged 50 is diagnosed with alcohol abuse. (Hint: rearrange the equation)
+
+```{r}
+myage <- 50
+# predicted log-odds:
+LOdds <- -0.22343898 -0.05706901 * myage
+LOdds
+# odds:
+Odds <- exp(LOdds)
+Odds
+# probability:
+prob <- Odds / (1+ Odds)
+prob
+```
+
+\vspace{.25in}
+
+
+
+(14) To interpret the slope (-0.057), let's compare the odds of someone 50 to the odds of someone 51. What if we wanted to compare the odds for two people with a 10-year age difference? 
+
+`r colorize("Remember that this is the odds for age = 50 and age = 51. We can compare them using the odds ratio:", "blue")`
+
+`r colorize("$e^{-0.2234 -0.05707 (51)} = e^{-0.2234} e^{-0.05707 (51)} = (0.80) (0.94)^{51}$", "blue")`
+
+`r colorize("$e^{-0.2234 -0.05707 (50)} = e^{-0.2234} e^{-0.05707 (50)} = (0.80) (0.94)^{50}$", "blue")`
+
+`r colorize("$(0.80) (0.94)^{51} / (0.80) (0.94)^{50} = (0.94)^{51} / (0.94)^{50} = 0.94$", "blue")`
+
+
+`r colorize("So, we can say that for each increase in age, we multiply the odds of success (abusing alcohol) by 0.94. ", "blue")`
+
+
+`r colorize("For a 10-year age diference we would have $0.94^10 = 0.54$. ", "blue")`
+
+\vspace{.25in}
+
+
+
+
+
+(15) If we want to test gender, we could do:
+
+```{r}
+gender.glm <- glm(alc.bin ~ sex, data = sub.cher, family = "binomial")
+summary(gender.glm)
+```
+
+Note that the Z value in this case is NOT the square root of the $\chi^2$ statistic above.  That's because they are testing two different things.  One is testing independence of $\pi$ values, the other is testing a logistic relationship between sex and alcohol.
+
+
+
+(16) What is the predicted odds ratio for males compared to females?  What sex is more likely to abuse alcohol? How does this relate to our parameters? 
+
+```{r}
+Odds_m <- exp(-3.8290 + 2.1754) 
+Odds_f <- exp(-3.8290)  
+
+OR_mf <- Odds_m / Odds_f
+
+c(Odds_m, Odds_f, OR_mf)
+
+# check with exp of beta_male
+exp(2.1754)
+```
+
+`r colorize("This corresponds to the slope 2.175, as the odds ratio between males and females is 8.8. For this indicator variable, a one unit change indicates changing from females to males. Males are more likely to have been diagnosed with alcohol abuse.", "blue")`
+
+
+\vspace{1.in}
+
+(17) What is the probability a male is diagnosed with alcoholism?  What is the probability a female is diagnosed?
+
+```{r}
+prob_m <- Odds_m / (1 + Odds_m)
+prob_f <- Odds_f / (1 + Odds_f)
+c(prob_m, prob_f)
+```
+
+\vspace{0.25in}
+
+
+
+(18) What is a 95\% CI for $\beta_{sex}$?
+
+`r colorize("$beta1 \\pm 2 \\times SE$", "blue")`
+
+\vspace{.25in}
+
+
+
+(19) So this gives us a 95\% Confidence interval for the effect of sex on the log-odds.  If we want a 95\% CI for the multiplicative effect of gender on alcoholism we could do:
+
+```{r}
+
+c(2.1754 - 2 * 0.1453, 2.1754 + 2 * 0.1453)
+c(exp(1.89), exp(2.46))
+```
+
+So males are 6.62 to 11.7 more times likely to develop alcoholism than females, according to this analysis.

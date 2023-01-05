@@ -1,0 +1,298 @@
+---
+title: "Lesson 19 SLO Real Estate (5.2)"
+author: "LTC J.K. Starling"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+#### Background
+Although numerous variables impact the initial selling price of a home, realtors try to identify which variables are most critical in a particular region. Using information on similar homes helps them establish a fair market value for a new home. In this exploration, you will explore home prices from a particular housing market to help to help identify the impact of several variables on the list price.
+
+```{r}
+# Load packages
+library(tidyverse)
+library(ggResidpanel)
+library(car)
+library(GGally)
+```
+
+<!-- `r colorize(".....", "blue")` -->
+
+#### STEP 1: Ask a research question.
+(1) Suggest some potential characteristics (variables) of homes that are easily accessible and that you believe will help explain variation in home prices.
+
+`r colorize("Square footage, stories, age, location, lot size", "blue")`
+
+\vspace{0.5in}
+
+
+(2) Suppose you thought both the size of the home and the age of the home were important variables. How might you decide which one was more important?
+
+`r colorize("Determine the standardized effect for both size and age of home, the larger standardized effect is more important.", "blue")`
+
+\vspace{0.5in}
+
+
+#### STEP 2: Design a study and collect data.
+
+A local realtor shared data with us on all listings in San Luis Obispo, CA, in 2017. We did some data cleaning (e.g., a home listed as 4200 square feet built in 1910 was excluded since online follow-up on that home could not confirm that interesting combination of values). A few other homes with some missing data were also removed. The data in SLO2017 contains list prices (in $100,000s) for 454 homes. Some quantitative variables available for predicting the list price include square footage (in thousands of square feet), number of bedrooms, and year built.
+```{r}
+### Data management
+SLO <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/SLO2017.csv", header = TRUE, stringsAsFactors = TRUE)
+# setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block III/LSN19/")
+# SLO <- read.csv("SLO2017.csv", header = TRUE, stringsAsFactors = TRUE)
+```
+
+(3) Create a new variable that represents the age of the home in 2017. Show a histogram of these values. Do these values make sense? 
+```{r}
+SLO <- SLO %>% mutate(age = 2017 - YrBuilt)
+SLO %>% ggplot(aes(x = age)) + geom_histogram(binwidth = 1)
+max(SLO$YrBuilt)
+```
+
+`r colorize("We would expect the number of new homes sold to be more than the other homes in the market for any average year.", "blue")`
+
+\vspace{0.5in}
+
+
+#### STEP 3: Explore the data.
+
+(4) Examine scatterplots and summarize how each of these variables (sqft, number of bedrooms, and age) are associated with list price and how the pairs of explanatory variables are associated with each other.
+- Price vs. square footage:
+- Price vs. number of bedrooms:
+- Price vs. age:
+- Square footage vs. age:
+- Square footage vs. number of bedrooms:
+- Age vs. number of bedrooms:
+```{r}
+SLO %>% ggplot(aes(x=price, y = Sqft.1000)) + geom_point()
+# SLO %>% ggplot(aes(x=price, y = Bedrooms)) + geom_point()
+# SLO %>% ggplot(aes(x=price, y = age)) + geom_point()
+# SLO %>% ggplot(aes(x=Sqft.1000, y = age)) + geom_point()
+# SLO %>% ggplot(aes(x=Sqft.1000, y = Bedrooms)) + geom_point()
+# SLO %>% ggplot(aes(x=age, y = Bedrooms)) + geom_point()
+
+SLO2 <- SLO %>% select(price, Sqft.1000, age, Bedrooms)
+pairs(SLO2)
+
+# ggpairs(SLO2)
+ggpairs(SLO2, aes(color = as.factor(Bedrooms)))
+```
+
+`r colorize("Price vs. square footage: The data reveals a very strong, positive linear association between price and square footage.", "blue")`
+
+`r colorize("Price vs. number of bedrooms: There is a strong, positive linear association between price and number of bedrooms.", "blue")`
+
+`r colorize("Price vs. age: There is no association between price and age. Square footage vs. age: There is a weak, negative association between square footage and age.", "blue")`
+
+`r colorize("Square footage vs. number of bedrooms: There is a strong, positive association between square footage and number of bedrooms.", "blue")`
+
+`r colorize("Age vs. number of bedrooms: There is no association between age and number of bedrooms.", "blue")`
+
+\vspace{0.5in}
+
+(5) How accurately can we predict the list price based only on the *square footage of the home*? 
+```{r}
+sq.lm <- SLO2 %>% lm(price ~ Sqft.1000, data = .)
+summary(sq.lm)
+```
+
+`r colorize("Square footage alone accounts for 66.9% of the variation in list price. The residual standard error of $1.584 thousand reveals that we can predict the list price within $158,400. Using only square footage does not give a very accurate prediction.", "blue")`
+
+\vspace{0.5in}
+
+
+(6) How accurately can we predict the list price based only on the *age of the home*? 
+```{r}
+age.lm <- SLO2 %>% lm(price ~ age, data = .)
+summary(age.lm)
+```
+
+`r colorize("Age accounts for only .016% of the variation in list price. The residual standard error of 2.752 indicates that we can predict list price within $275,200. It is surprising that age explains virtually no variation in list price. For this dataset, the age of the home does not tell us much about its price.", "blue")`
+
+\vspace{0.5in}
+
+
+#### STEP 4: Draw inferences beyond the data.
+
+
+(7) Now explore the two-variable model that includes both Sqft/1000 and age. 
+```{r}
+sfage.lm <- SLO2 %>% lm(price~Sqft.1000+age, data = .)
+summary(sfage.lm)
+```
+\vspace{0.5in}
+
+
+(8) Is the two-variable model statistically significant? Do the slope coefficients change? Do the variables still explain variation in the list prices after adjusting for the other variable? How does the model $R^2$ value compare to the sum of the individual $R^2$ values?
+
+`r colorize("The Fstatistic of 568.8 and pvalue of < 0.0001 indicate a significant model. The slope coefficients each increase slightly in size. Now both variables each explain a significant amount of variation in list price after adjusting for the other, the new model $R^2$ value of 0.716 is larger than the sum of the individual $R^2$  values by about .05. Square footage still explains more of the variability explained, but age, after adjusting for square footage, is now significant.", "blue")`
+
+\vspace{0.5in}
+
+
+(9) Based on your analyses so far, are sqft and age confounded? Explain how you are deciding.
+
+`r colorize("There is evidence of confounding because we’ve seen that square footage is related to price, and that age and square footage are related to each other when we explored two variable scatterplots (even though by itself price is not strongly related to age). When we put both variables in the model simultaneously, the coefficient for age was quite a bit different than in a model predicting price by age alone. We also note that the sum of the adjusted sums of squares is larger than the model sum of squares. In this case, it’s less that the two explanatory variables explain the same variation, and more that after removing the variation explained by square footage, age explains more remaining variation in list price.", "blue")`
+
+\vspace{0.5in}
+
+
+(10) Create added variable plots using the `avPlots()` function. Describe what you see (use the figure on the *right*). 
+
+```{r}
+# from car package
+avPlots(sfage.lm, pch=20)
+```
+
+`r colorize("After adjusting for square footage, the data depict a moderate, linear, positive association between age and price. If we compare homes of the same size, then knowing the age of the home helps explain some of the remaining variation in price. (Older homes tend to cost more, older homes also tend to be smaller.)", "blue")`
+
+\vspace{0.5in}
+
+
+(11) Based on the residual plots, does this statistical model appear to be valid?
+```{r}
+resid_panel(sfage.lm, plots = c('hist', 'resid'))
+```
+
+`r colorize("The residuals plots validate the model. The histogram of residuals is normally distributed. Furthermore, there is no curvature in the predicted values vs. residuals and they are symmetrically spread above and below 0. However, there is some evidence of “fanning” in the residuals vs. predicted graph, indicating that the equal variance condition may be violated.", "blue")`
+
+\vspace{0.5in}
+
+
+(12) Next, we want to consider the potential interaction between age and square footage. Keep in mind this is very different from asking whether age and square footage are associated as you just explored. (note: in the SLO file there is already a column with the interaction term.)
+
+Create a linear model that includes interaction between age and square footage. Is the interaction statistically significant (after adjusting for the other two variables)? Cite appropriate information to support your conclusion.
+
+```{r}
+SLO3 <- SLO %>% select(price, Sqft.1000, age, Bedrooms, SqftxAge)
+int.lm <- SLO3 %>% lm(price~Sqft.1000+age+SqftxAge, data=.)
+int.lm <- SLO3 %>% lm(price~Sqft.1000*age, data=.)
+summary(int.lm)
+anova(int.lm)
+avPlots(int.lm)
+```
+
+`r colorize("After adjustment for square footage and age there is strong evidence of a significant interaction shown by an Fstatistic of 14.36, tstatistic of −3.79, and pvalue of 0.000172.", "blue")`
+
+\vspace{0.5in}
+
+
+(13) Has the behavior of the residual plots improved with the inclusion of the interaction? Explain.
+```{r}
+resid_panel(int.lm, plots = c('hist', 'resid'))
+```
+
+
+`r colorize("There is not much change in the behavior of the residuals. The histogram of residuals is similarly normally distributed. The balance of positive and negative residuals remains, and the lack of curvature holds true. Furthermore, the slight increase in variance toward the right of the predicted values vs. residuals plot is diminished but still potentially concerning.", "blue")`
+
+\vspace{0.5in}
+
+
+(14) Is the slope coefficient for the interaction positive or negative? What does the sign of the coefficient of the interaction tell you about the nature of the interaction in this context?
+
+`r colorize("The slope coefficient for the interaction is negative. This shows that the “effect” of one variable is smaller if the other variable is large; e.g., the effect of square footage diminishes when increasing age and vice versa.", "blue")`
+
+\vspace{0.5in}
+
+
+(15) To further illustrate your answer to #14, write out the prediction equations for predicting price from square footage for the following ages:
+
+- 20: `r colorize("predicted price at age 20 : price = -0.450 + 4.159 x sqft/1000", "blue")`
+\vspace{0.15in}
+- 70: `r colorize("predicted price at age 20 : price = 2.145 + 3.249 x sqft/1000", "blue")`
+\vspace{0.15in}
+- 120: `r colorize("predicted price at age 20 : price = 4.740 + 2.339 x sqft/1000", "blue")`
+\vspace{0.15in}
+
+
+(16) How did the “significance” of sqft and of age change when the interaction was included in the model? (Hint: Look at the t-statistics.)
+
+`r colorize("The significance of both square footage and age is reduced when adding the interaction term. The tstatistic for age decreases from 8.69 to 6.60. Likewise, the tstatistic for square footage decreases from 33.72 to 22.86.", "blue")`
+\vspace{0.5in}
+
+(17) Create a scatterplot of the interaction term vs. square footage. Do you see evidence of a linear association between the interaction term and square footage? Why is this not a huge surprise?
+
+```{r}
+SLO %>% ggplot(aes(x=SqftxAge, y=Sqft.1000)) + 
+  geom_point() + 
+  geom_smooth(method='lm', se=TRUE)
+```
+
+`r colorize("The scatterplot of interaction vs. square footage reveals a moderate, positive association between interaction and square footage. This is not surprising because both terms involve square footage!", "blue")`
+\vspace{0.5in}
+
+(18) It turns out that one way to “control” this induced linear association with quantitative variables is to standardize the variables involved in the interaction first. Standardizing the variables does not change their association with the response variable, but it will change their association with each other. The standardized variables have also been included for you in the data file (std sqft, std age, and std sqft × std age).
+
+Create a scatterplot of the interaction between the standardized variables and the standardized square footage variable.
+
+```{r}
+SLO %>% ggplot(aes(x=std.sqrtxstd.age, y =std.sqft)) + 
+  geom_point()+ 
+  geom_smooth(method='lm')
+```
+\vspace{0.15in}
+
+
+(19) Create a linear model with the standardized values including the interaction. How does the significance of the main effect change if we standardize the variables before including the interaction? (Include supporting evidence.)
+```{r}
+std.lm <- SLO %>% lm(price~std.sqft * std.age, data=.)
+summary(std.lm)
+
+SLO_std = SLO %>%
+  mutate_at(list(~scale(.)), .var = vars(Sqft.1000, age))
+std.lm2 <- SLO_std %>% lm(price~Sqft.1000 * age, data=.)
+summary(std.lm2)
+```
+
+`r colorize("The significance of the main effects increases. The tstatistic for std. age increases from 6.60 to 8.24. Likewise, the tstatistic for std. sqft increases from 22.86 to 32.51.", "blue")`
+\vspace{0.5in}
+
+(20) Provide an interpretation in context of the slope coefficient of the standardized square footage variable in this two-variable model with an interaction term. (Hint: What happens in this prediction equation if we use year = 1977, the mean year of our dataset?)
+
+`r colorize("The std.sqft slope coefficient is 0.5828. This means that at the mean age of 1977 a one unit increase in std. sqft is associated with an increase in the predicted list price by $58,280.", "blue")`
+\vspace{0.5in}
+
+### STEP 5: Formulate conclusions
+
+(21) Write a summary of your analysis, as if to a realtor, about the usefulness of your two-variable model in predicting initial selling prices in this market. You should include any limitations of your model and how it can be used. If the interaction is significant, include a discussion of the nature of the interaction in terms your realtor friend can understand.
+
+`r colorize("Square footage and age are both significant factors in predicting price as shown by significant tstatistics of 32.51 and 8.24 respectively. Furthermore, the interaction between the explanatory variables is significant as shown by a tstatistic of −3.79. The “effect” of either variable decreases as the other variable increases. In other words, if we compare houses of the same size, there is less benefit to the price for an older home. Similarly, with older homes, there is less benefit of a larger size. We can typically predict the price within $144,400 as indicated by the standard error of residuals. We cannot infer a causation relationship due to the observational nature of the study; however, the data can be generalized to a similar sample of homes in San Luis Obispo, California, around this time period.", "blue")`
+\vspace{1.0in}
+
+### STEP 6: Look back and ahead.
+
+(22) Your realtor friend wants to include number of bedrooms in the model. Give one possible advantage and one possible disadvantage to doing so.
+
+`r colorize("Adding number of bedrooms will increase the amount of variation explained in price. However, there will likely be covariation between number of bedrooms and the other explanatory variables due to the observational nature of the study.", "blue")`
+\vspace{0.5in}
+
+(23) Create a model that includes square feet, age, and number of bedrooms. Interpret the sign of the slope coefficient of this variable. Does it make sense in this context? Explain.
+```{r}
+sfagebed.lm <- SLO %>% lm(price ~ std.sqft + std.age + Bedrooms, data = .)
+summary(sfagebed.lm)
+anova(sfagebed.lm)
+```
+
+`r colorize("The slope coefficient of number of bedrooms is negative. This does not make immediate sense in context as there was a positive, linear association between number of bedrooms and price in the data. However, it makes sense that if you compare homes of the same size and age, then increasing the number of bedrooms (meaning individual rooms are smaller) is associated with a decrease in price.", "blue")`
+\vspace{0.5in}
+
+

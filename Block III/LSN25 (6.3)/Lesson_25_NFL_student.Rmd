@@ -1,0 +1,197 @@
+---
+title: "Lesson 25 NFL Field Goals (continued) (6.3)"
+author: "LTC J.K. Starling"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+# `r colorize("....", "blue")`  # use this to color text
+```
+
+```{r}
+# Load packages
+library(tidyverse)
+
+fg <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/fg_2021-2.csv",
+               header=T, stringsAsFactors = TRUE)
+fg <- fg %>%  mutate(field_goal_result = fct_rev(as.factor(field_goal_result)))
+
+# setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons_AY23-1/Block III/LSN25 (6.3)/")
+# field_goal <- read.csv("fg_2021-2.csv", header = TRUE, stringsAsFactors = FALSE)
+
+
+```
+
+#### Background
+
+(0) Last class we looked at the 2021 NFL Season and field goal kicks. In this lesson we will build our previous models.
+
+We created a logistic regression model on the surface and distance.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+contrasts(fg$surface)
+surface.glm <- fg %>% glm(field_goal_result ~ surface, data = ., family = 'binomial')
+distance.glm <- glm(field_goal_result ~  kick_distance, data = fg, family = 'binomial')
+summary(surface.glm)
+summary(distance.glm)
+```
+
+\vspace{0.05in}
+
+(1) We then took a look at the coefficients for each model and found the confidence intervals on those coefficients. How did we interpret these coefficients? What conclusions can we draw based on the confidence intervals?
+
+```{r echo=TRUE, fig.height=3, fig.width=3, message=FALSE, warning=FALSE, fig.align='center'}
+coef(surface.glm) 
+confint(surface.glm)
+
+coef(distance.glm)                
+confint(distance.glm) 
+```
+
+
+\vspace{0.5in}
+
+
+(2) We can also take the exponential of the coefficients and their CIs. Why would we do this? What is the interpretation of these results?
+
+```{r}
+exp(coef(surface.glm))           
+exp(confint(surface.glm))
+
+exp(coef(distance.glm))           
+exp(confint(distance.glm))   
+```
+
+
+\vspace{0.5in}
+
+
+(3) Create a new logistic regression model that predicts the field goal result, taking into account the surface type and the kick distance. Discuss the results of this model.
+
+```{r}
+surf.dist.glm <- glm(field_goal_result ~ surface + kick_distance, data=fg, family='binomial')
+summary(surf.dist.glm)
+coef(surf.dist.glm)                
+confint(surf.dist.glm)
+```
+
+
+\vspace{0.5in}
+
+
+(4) Create a new logistic regression model that predicts the field goal result, taking into account the *interaction* between surface type and kick distance. Discuss the results of this model.
+
+```{r}
+int.glm <- glm(field_goal_result ~ surface * kick_distance, data=fg, family='binomial')
+summary(int.glm)
+coef(int.glm)                # Predicted log odds of making the field goal
+confint(int.glm)
+```
+
+\vspace{0.5in}
+
+
+
+
+(5) Calculate:
+
+-   the overall percentage rate for field goals made
+-   correct classification rate with `surface.lm`
+-   correct classification rate with `distance.lm`
+-   correct classification rate with `surf.dist.lm`
+-   correct classification rate with `int.lm`
+
+(What do we need to specify in order to calculate the percentages/rates? )
+
+```{r}
+calc.accuracy <- function(A){
+  denom <- sum(A)
+  TP <- 0; TN <- 0
+  TP <- tryCatch(A["made","made.p"], silent=TRUE, error = function(ee) 0)
+  TN <- tryCatch(A["missed","missed.p"], silent=TRUE, error = function(ee) 0)
+  return ((TP + TN) / denom)
+}
+
+# calculate overall percentage
+fg.attempts <- length(fg$field_goal_result) # should be 1076
+fg.made <- sum(fg$field_goal_result == 'made')
+overall.fg.rate <- fg.made / fg.attempts; 
+overall.fg.rate
+
+my.rate <- 0.5
+# using surface model
+fg.surf.pred <- ifelse(surface.glm$fitted.values >= my.rate, "made.p", "missed.p")
+surf.tab <- table(fg$field_goal_result, fg.surf.pred)
+surf.tab
+fg.surf.rate <- calc.accuracy(surf.tab)
+fg.surf.rate
+
+# using distance model
+fg.dist.pred <- ifelse(distance.glm$fitted.values >= my.rate, "made.p", "missed.p")
+dist.tab <- table(fg$field_goal_result, fg.dist.pred)
+dist.tab
+fg.dist.rate <- calc.accuracy(dist.tab)
+fg.dist.rate
+
+# using surf + distance model
+fg.sd.pred <- ifelse(surf.dist.glm$fitted.values >= my.rate, "made.p", "missed.p")
+sd.tab <- table(fg$field_goal_result, fg.sd.pred)
+fg.sd.rate <- calc.accuracy(sd.tab)
+fg.sd.rate
+
+# using surf * distance model
+int.pred <- ifelse(int.glm$fitted.values >= my.rate, "made.p", "missed.p")
+sd.tab <- table(fg$field_goal_result, int.pred)
+int.rate <- calc.accuracy(sd.tab)
+int.rate
+
+c(fg.surf.rate, fg.dist.rate, fg.sd.rate, int.rate)
+# cor(fg$field_goal_result, fg.sd.pred)
+
+```
+
+
+\vspace{0.5in}
+
+(6) How can we check overall model performance?\
+
+
+```{r}
+my.rate <- 0.5
+fgmade <- ifelse(fg$field_goal_result == 'made', 1, 0)
+surf.made.p <- ifelse(unname(surface.glm$fitted.values) >= my.rate, 1, 0)
+dist.made.p <- ifelse(unname(distance.glm$fitted.values) >= my.rate, 1, 0)
+surfdist.made.p <- ifelse(unname(surf.dist.glm$fitted.values) >= my.rate, 1, 0)
+
+c(sum(surf.made.p), sum(dist.made.p), sum(sum(dist.made.p)))
+cor(fgmade, surf.made.p)^2
+cor(fgmade, dist.made.p)^2
+cor(fgmade, surfdist.made.p)^2
+
+```
+
+
+    \vspace{0.5in}
+
+(7) In R, redo  (5) and (6) above with various values for `my.rate`. What is the best choice for `my.rate` for maximizing the accuracy? for maximizing the $R^2$? 
+
+```{r, include=FALSE}
+
+```
+

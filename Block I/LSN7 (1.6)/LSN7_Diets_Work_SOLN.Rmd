@@ -1,0 +1,179 @@
+---
+title: 'Lesson 7: Do Diets Really Work? (continued #2)'
+author: "LTC James K Starling"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+
+```
+<br>
+
+### Background
+Recall that in Lesson 5 and 6 we investigated the impact diet (Vegetarian, Keto, and None) has on weight loss (kg lost).
+
+```{r Setup, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(pwr) # see https://www.statmethods.net/stats/power.html for good tutorial.
+
+## Load data
+dietdat <- read_csv('https://raw.githubusercontent.com/jkstarling/MA376/main/WeightLoss.csv')
+
+# glimpse(dietdat)
+## change data types appropriately.
+dietdat <- dietdat %>% mutate(diet = as.factor(diet)) %>% 
+  mutate(exercise = as.factor(exercise))
+```
+
+(1) What was our null and alternative hypotheses (in words and symbols, assuming we are going to conduct ANOVA)?
+\vspace{0.5in}
+
+`r colorize("The null hypothesis is there is no association between weight loss and diet type, the alternative hypothesis is that there is an association between weight loss and diet type", "blue")`.
+$$H_0: \mu_{Vegetarian} = \mu_{Keto} = \mu_{None}$$
+$$H_A: \mbox{at least one of the } \mu \mbox{ is different from the others.}$$
+ 
+ (2) For the diet study, what is a Type I error/Type I error rate? Type II error/Type II error rate?
+\vspace{0.5in}
+
+`r colorize("Type I error (false positive)- rejecting $H_0$ when $H_0$ is TRUE. In the diet study, a type I error will occur when we say there is an association between diet and weight loss when there actually is no association. The type I error rate is the probabilty of saying the above (also known as the significance level ($\\alpha$).", "blue")`
+
+`r colorize("Type II error (false negative)- failing to reject $H_0$ when $H_0$ is FALSE. In the diet study a Type II error will occur when say there is no association between diet and weight loss when in fact there is an association. The Type II error rate is the probability of saying the above ($\\beta$).", "blue")`
+
+(3) What is statistical power? 
+\vspace{0.5in}
+
+`r colorize("Statistical power is the probability that the researchers find evidence against the null hypothesis and in favor of the alternative hypothesis when the alternative hypothesis is TRUE (p.103). ($1-\\beta$)", "blue")`
+
+(4) What elements of a study can affect statistical power? 
+\vspace{0.5in}
+
+`r colorize("These elements are sample size ($n$) and amount of unexplained variation (# of groups, $R^2$. Additionally, the significance level will affect the power as this will affect the probability that we reject the null hypothesis (whether or not $H_0$ is TRUE)", "blue")`
+
+(5) Focusing on the F-statistic, we can explore the impact of how the elements will affect statistical power. 
+$$F=\left[ \frac{R^2}{1-R^2} \right] \times \left[ \frac{n - \text{# of groups}}{\text{# of groups - 1}} \right]$$
+Using the code from Lesson 6:
+```{r}
+contrasts(dietdat$diet) <- contr.sum
+multi.lm <- lm(wloss~diet, data=dietdat)
+summary(multi.lm)
+anova(multi.lm)
+
+```
+
+We saw that we strong evidence to reject the null hypothesis ('rather large' F-statistic and 'rather small' p-value). 
+
+Let's see what happens when we reduce the number of observations. 
+```{r}
+dietdat2 <- dietdat %>% group_by(diet, exercise)  %>%  slice_head(n=10)
+```
+
+(6) Create a multiple-means model using 'dietdat2' data. Calculate the F statistic and p-value. Use the names 'multi.lm2', 'Fstat2', 'pmm2', and 'Rsq2'. Explain the results.
+\vspace{0.5in}
+
+```{r}
+multi.lm2 <- dietdat2 %>%  lm(wloss~diet, data=.)
+summary(multi.lm2)
+anova(multi.lm2)
+
+```
+
+`r colorize("We see that the F statistic decreased to 7.44 and the corresponding p-value to 0.001. We see that although we would still reject the null hypothesis at the $\\alpha = 0.05$ significance level, we have reduced the evidence towards doing so. We also see that the $R^2$ value increased slightly from 0.1077 to 0.1460.", "blue")`
+
+(7) Let's see what happens when we reduce the number of groups by combining Vegetarian and Keto diets. 
+
+Create a multiple-means model using 'dietdat3'. Calculate the F statistic and p-value. Use the names 'multi.lm3', 'Fstat3', 'pmm3', and 'Rsq3'. Explain the results.
+\vspace{0.5in}
+```{r}
+dietdat3 <- dietdat %>% mutate(kv=fct_collapse(diet, KV = c("Keto", "Vegetarian")))
+multi.lm3 <- dietdat3 %>%  lm(wloss~kv, data=.)
+summary(multi.lm3)
+anova(multi.lm3)
+```
+
+`r colorize("We see that the F statistic increased to 13.85 but the corresponding p-value to increased slightly to 2.6e-4. We also see that the $R^2$ value decreases slightly from 0.1077 to 0.0722.", "blue")`
+
+
+(8) Let's see what happens when we reduce the number of groups by combining Vegetarian and None diets (not recommended... why?). 
+
+Create a multiple-means model using 'dietdat4'. Calculate the F statistic and p-value. Use the names 'multi.lm4', 'Fstat4', 'pmm4', and 'Rsq4'. Explain the results.
+\vspace{0.5in}
+```{r}
+dietdat4 <- dietdat %>% mutate(nv=fct_collapse(diet, NV = c("None", "Vegetarian")))
+multi.lm4 <- dietdat4 %>%  lm(wloss~nv, data=.)
+summary(multi.lm4)
+anova(multi.lm4)
+
+```
+
+`r colorize("We see that the F statistic decreases substantially with an increase in the p-value, while the $R^2$ value decreases to 0.00083. We should expect this since in the context of the problem we would not recommend combining None with any other diet factor level.", "blue")`
+
+(9) Now we will go over HW #1.6.11 to show how calculate power in R:
+
+*Suppose you are testing to see whether, on average, heart rates measured in beats per minute (bpm), after jumping for 30 seconds are higher than after sitting for 30 seconds. There are 20 students from your statistics class who have volunteered to participate. You randomly assign 10 to the jumping treatment and 10 to the sitting treatment. You may assume that the SD of heart rates within each condition is 8 beats per minute.*
+
+a. *Use the Comparing Two Populations (we will use R) applet with both means set to 80. Use a significance level of  Which of the following is the best rejection region for detecting that the population mean heart rate after jumping is higher than after sitting?*
+
+How do we account for this without the applet?  ANS: Use the standardized t-statistic: $$t^*_{df} = \frac{\overline{\Delta} - \mu_0}{s/\sqrt{n}}$$
+or rewriting it (with $\mu_0 = 0): 
+$$\overline{\Delta} = t^*_{df} \cdot \frac{s}{\sqrt{n}}$$
+
+```{r}
+qt(0.025, df = 9, lower.tail = FALSE) * 8 / sqrt(10)
+```
+\vspace{0.5in}
+
+`r colorize("The rejection region for detecting the jumping heart rate being higher than the sitting rate is a difference of 5.7 bpm.", "blue")`
+
+b. If you find a difference in the mean heart rate of 7 bpm, what will you conclude about the two treatments? 
+\vspace{0.5in}
+
+`r colorize("7 bpm > 5.7 bpm, so we reject the null hypothesis (that the heart rates are the same).", "blue")`
+
+c. If you find a difference in the mean heart rate of 4 bpm, what will you conclude about the two treatments? 
+
+`r colorize("4 bpm < 5.7 bpm, so we fail to reject the null hypothesis (that the heart rates are the same).", "blue")`
+
+d. What is the probability of making a Type I error?
+
+`r colorize("(Trick question?) This is simply the significance level ($\\alpha=0.05$).", "blue")`
+
+e. What is the probability of rejecting the null hypothesis if the difference in mean heartbeats is 5 bpm? 
+
+```{r}
+library(pwr)
+n_students <- 10
+sd <- 8
+del <- 5
+pwr.t.test(n=n_students, d=del/sd, sig.level = 0.05, alternative = "greater")
+```
+
+f. What is the probability of rejecting the null hypothesis if the difference in mean heartbeats is 10 bpm? 
+
+```{r}
+del <- 10
+pwr.t.test(n=n_students, d=del/sd, sig.level = 0.05, alternative = "greater")
+```
+
+g. (Fill out the table... find the power for bpm = 5, 10, 15, 20, 25)
+```{r}
+del <- 15
+pwr.t.test(n=n_students, d=del/sd, sig.level = 0.05, alternative = "greater")
+
+del <- 20
+pwr.t.test(n=n_students, d=del/sd, sig.level = 0.05, alternative = "greater")
+
+del <- 25
+pwr.t.test(n=n_students, d=del/sd, sig.level = 0.05, alternative = "greater")
+```

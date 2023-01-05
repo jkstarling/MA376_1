@@ -1,0 +1,180 @@
+---
+title: "\\vspace{-1in} LSN1-Grad School Admissions"
+author: "MA376 - LTC Starling"
+geometry: "left=2cm,right=2cm,top=2cm,bottom=2cm"
+output:
+  pdf_document: default
+  html_document: default
+---=
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exploring the Berkeley Grad School Dataset
+
+```{r grad, include=FALSE}
+library(tidyverse)
+library(vcd)
+library(table1)
+# library(ggmosaic)
+
+grad <- read_csv("https://raw.githubusercontent.com/jkstarling/MA376/main/Berkeley.csv")
+
+grad <- read_csv("Berkeley.csv")
+```
+
+### Explore the Berkeley Data set
+
+Let's take a look at the data:
+
+```{r glimpse}
+head(grad)
+glimpse(grad)
+table(grad$Program)
+table(grad$Program, grad$Sex)
+table(grad$Accepted,grad$Sex)
+```
+
+
+**Observational units:** *People who are applied to grad school at UC Berkeley.*
+
+**Variables**
+
++ **Response variable:** 
+  + *Accepted (binary) (yes/no)*
+
++ **Explanatory variables:**
+  + *Sex (categorical) (Male/Female)*
+  + *Program (categorial) (A/F)*
+
+
+Let's change the variables to be categorical:
+
+```{r}
+grad2 <- grad %>% mutate(Program = as.factor(Program)) %>% 
+         mutate(Sex = as.factor(Sex)) %>% 
+         mutate(Accepted = as.factor(Accepted))
+```
+
+
+### Create a bar plot of accepted vs rejected.
+
+```{r}
+acc2 <- grad2 %>% pull(Accepted) %>% 
+  fct_count() %>% 
+  mutate(perc = n / nrow(grad2))
+# same as above: # acc2 <- fct_count(grad2$Accepted) %>% mutate(perc = n / nrow(grad2))
+acc2 %>% ggplot(aes(x=f)) + 
+  geom_bar(aes(y=perc),stat = "identity") + 
+  labs(x="Accepted", y="% of students") +
+  scale_y_continuous(labels=scales::percent)
+
+```
+
+What do we see here? 
+
+*Most (60%) of the applicants were rejected.*
+
+### Create a Contingency Table
+
+We can ask the question, "Is the admissions process at Berkeley fair?". Or a more focused question, "Does the admissions process at Berkeley disproportionately affect women applicants?"
+
+```{r echo=TRUE}
+table1(~Accepted | Sex, data=grad2)
+
+```
+
+What do we see here? Is the 
+
+### Create Mosaic plot
+
+
+Create a mosaic plot to see the data related to sex and acceptance: 
+
+```{r}
+# labs <- round(prop.table(table(grad2$Accepted, grad2$Sex)),2)
+mosaic(~Sex+Accepted, data=grad2, highlighting="Accepted", highlighting_fill = c("lightblue", "lightgreen"), direction=c("v","h"))
+```
+
+What does this plot tell us? Are sex and acceptance *associated*?
+
+*It looks like there are less females accepted. Also, more males applied to grad school. Sex and acceptance are associated.*
+
+Does the program a person applied to make a difference? To explore this, we will condition on the program applied to:
+```{r}
+mosaic(~Program+Accepted+Sex, data=grad2, highlighting="Accepted", highlighting_fill = c("lightblue", "lightgreen"), direction=c("v","h","v"))
+```
+
+What does this plot tell us? Is program associated with acceptance? How is this different than the previous plot?
+
+*For program A, it appears that less females applied, but they were accepted at a higher rate than males. For program F, it appears that roughly an equal number of females and males applied and were accepted at roughly the same (lower) rate.*
+*We also see that program AND sex are associated with acceptance.*
+
+*This is called Simpson's paradox, where the direction of the association between sex and acceptance reverses direction.*
+
+
+Here we look at the association between acceptance and program, conditioned on sex: 
+
+```{r}
+mosaic(~Sex+Accepted+Program, data=grad2, highlighting="Accepted", highlighting_fill = c("lightblue", "lightgreen"), direction=c("v","h","v"))
+```
+
+What do we notice here compared to our first mosaic plot above? 
+
+*We notice that must consider the program and the sex when considering the acceptance rates for males and females.*
+
+What can we say about our original question, "Does the admissions process at Berkeley disproportionately affect women applicants?"? What do we call the variable *program*? 
+
+*When looking only at acceptance rates and sex, we may incorrectly say that females have a  disproportionate admission rate if we do not consider which program they applied to. 'Program' is called a confounding variable. (draw diagram if necessary)*
+
+
+
+### Sources of Variation Diagram
+
+On p. 8, the author provides the Sources of Variation diagram shown here. 
+
+<center>
+![](SoV_p6.jpg){width=6in}
+</center>
+
+Are there other sources to consider? 
+
+\vspace{1in}
+
+Six Steps of a statistical investigation:
+
+- Ask a Research Question
+\vspace{0.2in}
+
+- Design a study and collect data
+\vspace{0.2in}
+
+-  Explore the data
+\vspace{0.2in}
+
+-  Draw inferences beyond the data
+\vspace{0.2in}
+
+-  Formulate conclusions
+\vspace{0.2in}
+
+-  Look back and ahead
+\vspace{0.2in}
+
+
+Did we do this with the Berkeley Data? What would you tell the college administration?
+
+\vspace{0.4in}
+
+Can we create a statistical model for the Berkeley data?
+
+
+
+
+
+
+
+
+
+

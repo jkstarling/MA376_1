@@ -1,0 +1,225 @@
+---
+title: "\\vspace{-1.05in} Lesson 2 Afghan Schools"
+author: "CDT I. M. Smrt"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = TRUE,
+	warning = FALSE
+)
+```
+
+In 2007-2008 researchers tested the effect of village based schools vs. traditional government schools on test scores in northwestern Afghanistan. An initial sample of 34 villages were grouped into 12 equally sized village groups based on political and cultural alliances. Five village groups were randomly selected to establish a village based school.  Unfortunately, due to an inter-village conflict, one group could never be surveyed and had to be dropped from the sample. As a result, the final sample consisted of 11 village groups (5 treatment and 6 control) and 31 villages (13 treatment and 18 control).
+
+# Step 1: Ask a research question
+
+**1) What was the research question for conducting this study?**
+\vspace{1in}
+
+
+
+# Step 2: Design a study and collect data
+
+First we will bring in our data set:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+afghan = read_csv("https://raw.githubusercontent.com/jkstarling/MA376/main/afghan_school.csv")
+```
+
+The data set contains the following variables:
+
+| Variable | Description | Units |
+|---|---|---|
+| girl | indicator variable for the sex of the child | 1 if female, 0 if male |
+| age | age of the child | years |
+| num_people | number of people living in the household | people |
+| jerib_cnt | number of jeribs of land owned by the household | jeribs |
+| sheep_cnt | number of sheep owned by the household | sheep |
+| treatment | indicator variable for if a child is in the treatment group (village school) | 1 if in treatment group, 0 if in control group |
+| test_score | final test score in the spring of 2008 | points |
+
+**2) Identify the response variable. Is this variable quantitative or categorical? (If categorical, note the number of categories. If quantitative, note the measurement units.)**
+\vspace{1in}
+
+
+**3) Was this an observational study or an experiment? How are you deciding? If it was an experiement was it double blind, single blind, or not blinded?**
+\vspace{1in}
+
+
+**4) Identify the experimental units. How many are there?** 
+\vspace{1in}
+
+
+```{r}
+
+```
+
+**5) Identify the treatment variable and it’s levels.**
+\vspace{1in}
+
+
+```{r}
+
+```
+
+
+**6) If planning the study, how would you determine who gets which treatment? What would you try to accomplish?**
+\vspace{1in}
+
+
+# Step 3: Explore the data
+
+**7) Create a dot plot of the outcomes of the response variable.  If you can not see the full distribution add `dotsize = .2` inside `geom_dotplot()`.  Note the axis labels on the y axis do not really have any meaning in dot plots made with ggplot. What does this plots tell you about your data? Summarize your observations in context of the problem.
+```{r}
+afghan %>% ggplot(aes(x = test_score)) +
+  geom_dotplot(dotsize = 0.3,binwidth = 1) +
+  labs(x = "Test Scores (Points)", title = "Dot plot of test scores") +
+  theme_classic()
+```
+\vspace{1in}
+
+
+
+**8) Calculate the mean and standard deviation for all test scores in the sample.**
+
+```{r}
+afghan %>% summarise(Mean = mean(test_score), SD = sd(test_score))
+```
+\vspace{1in}
+
+
+**9) Create and specify a statistical model for predicting future results using the overall mean score for your sample and specifying the standard error of the residuals. Also, plot a histogram of the residuals of the model. **
+
+```{r}
+#Single Mean Model
+single.model = lm(test_score~1, data = afghan)
+summary(single.model)
+```
+\vspace{1in}
+
+
+**Plot residuals:**
+```{r}
+ggplot(data=afghan, aes(x = single.model$residuals)) +
+  geom_histogram() +
+  labs(title = "Histogram of Residuals", x = "residuals", y = "frequency")
+```
+
+
+**10) Recreate your dot plot from question 7 stratifying on the treatment variable. Hint: you can separate the plots by adding `facet_wrap(~treatment)` to your ggplot code.**  
+
+```{r}
+afghan %>% ggplot(aes(x = test_score)) +
+  geom_dotplot(dotsize = 0.8,binwidth = 1) +
+  labs(x = "Test Scores (Points)", title = "Dot plot of test scores") +
+  theme_classic() + facet_wrap(~treatment)
+```
+\vspace{1in}
+
+**11) Create the same plot as a histogram.  What do these two plots tell you about your data? Summarize your observations in context of the problem.**
+```{r}
+afghan %>% ggplot(aes(x = test_score)) +
+  geom_histogram(binwidth = 1) +
+  labs(x = "Test Scores (Points)", title = "Histogram of test scores") +
+  theme_classic() + facet_wrap(~treatment)
+```
+\vspace{1in}
+
+ 
+
+**12) Calculate the mean and standard deviation of test scores for each group of the treatment variable.  Hint: you can use `group_by()` to group by treatment prior to any calculating values. Based on the group means, did one of the  groups tend to score higher than the other? By a lot or just a little? Which  group had more variable results?** 
+
+```{r}
+afghan %>% group_by(treatment) %>% summarise(Mean = mean(test_score), SD = sd(test_score))
+```
+\vspace{1in}
+
+
+
+**13) Create and specify a statistical model for predicting outcomes depending on which treatment condition someone is assigned to, using the treatment-specific mean scores (“school grouping model”). Hint: you will need to ensure that the treatment variable is a factor variable.**
+
+```{r}
+# Separate Means Model
+multi.model = lm(test_score ~ 0 + as.factor(treatment), data = afghan)
+summary(multi.model)
+```
+\vspace{1in}
+
+
+
+**14) Is the standard error of the residuals for the school grouping model smaller than the standard deviation of the residuals in the single mean model?**
+\vspace{1in}
+
+
+**15) Does knowing which treatment group each person was assigned to explain all the variation in responses? How are you deciding?**
+\vspace{1in}
+
+
+# Step 4: Draw inferences beyond the data
+
+We will discuss this in section 1.3.
+
+# Step 5: Formulate conclusions.
+
+**16) Summarize your “school grouping model” with a Sources of Variation Diagram:**
+
+| Observed variation in: | Sources of explained variation: | Sources of unexplained variation: |
+|--|--|--|
+|  |  |  |
+| | |  |
+| Inclusion criteria: | |  |
+| Design: | |  |
+
+**17) Examine the distributions of age for the two treatment groups. Does age appear to be a confounding variable in this study? How are you deciding? Hint: Use a histogram.**
+
+```{r}
+afghan %>% ggplot(aes(x = age))+
+  geom_histogram()+
+  facet_wrap(~treatment, ncol = 1)+
+  labs(x = "Age (years)", 
+       title = "Histogram of age by treatment type")+
+  theme_classic()
+```
+\vspace{1in}
+
+
+
+
+**18) Is Sex a confounding variable in this study? How are you deciding? Hint: if you are creating a plot, ensure that both the variable for sex and the variable for treatment are factors (use a boxplot).**
+
+```{r}
+afghan %>% 
+  ggplot(aes(x = as.factor(girl), y = test_score, 
+             fill = as.factor(treatment)))+
+  geom_boxplot()+
+  labs(x = "Sex (1 = Female, 0 = Male)", 
+       title = "Box plot of test scores by treatment type and sex")+
+  theme_classic()
+```
+\vspace{1in}
+
+
+
+**19) Could there be another explanation, apart from the type of school, that could explain the difference in the group means that we found? Explain.**
+\vspace{1in}
+
+
+
+# Step 6: Look back and ahead
+
+**20) Suggest at least one way you would improve this study if you were to carry it out yourself.**
+\vspace{1in}
+
+
+
+
+# References
+
+Burde, Dana, and Leigh L Linden. “Bringing Education to Afghan Girls: A Randomized Controlled Trial of Village-Based Schools.” American Economic Journal: Applied Economics 5, no. 3 (July 2013): 27–40. https://doi.org/10.1257/app.5.3.27.

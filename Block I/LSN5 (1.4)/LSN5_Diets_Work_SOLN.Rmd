@@ -1,0 +1,235 @@
+---
+title: '\vspace{-1.0in} Lesson 5: Do Diets Really Work?'
+author: "LTC James K Starling"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+
+```
+<br>
+
+### Background
+One hundred and eighty generally healthy adults were randomly assigned to one of three diet groups (Vegetarian, Keto, and None) and one of three exercise levels (60 min/day, 30 min/day, and None). After two months, participants were asked how many kilograms they had lost. 
+
+```{r Setup, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(ggResidpanel)
+
+## Load data
+dietdat <- read_csv('https://raw.githubusercontent.com/jkstarling/MA376/main/WeightLoss.csv')
+
+glimpse(dietdat)
+```
+
+Before we get started, we will change the "diet" and "exercise" to categorical variables in R. 
+```{r}
+dietdat <- dietdat %>% mutate(diet = as.factor(diet)) %>% 
+  mutate(exercise = as.factor(exercise))
+```
+
+
+#### Step 1: Ask a research question
+For this exercise the research question is 'Do diets *really*  work?'
+
+Can you come up with a refined research question that more accurately describes what we are trying to do? 
+\vspace{0.5in}
+
+`r colorize("Is there an assocation between diet and weight loss?", "blue")`
+
+
+#### Step 2: Design a study and collect data
+(1) Is this an observational study or an experiment? How are you deciding? 
+\vspace{0.5in}
+
+`r colorize("This is an experiment. Participants were randomized to the treatment groups ('treatment groups' are the levels of the diet variable)", "blue")`.
+
+(2) Identify and classify the response and explanatory variables.
+ \vspace{0.5in}
+ 
+ `r colorize("The response variable is weight loss in kg (quantitative), and the explantory variable is diet (categorical, 3-levels) ", "blue")`.
+
+#### Step 3: Explore the data
+
+(3) Create numerical and graphical summaries of the response variable by the treatment variable. Summarize your observations in context. Hint: For a numerical summary, use pipes and the "summarise" function for the count (n()), mean, and standard deviation; for the graphical summary use a histogram or other appropriate plot. 
+\vspace{0.5in}
+
+```{r Explore the Data}
+diet.means <- dietdat %>% group_by(diet) %>% summarize(n=n(), Mean=mean(wloss), SD=sd(wloss))
+diet.means
+
+# Create a histogram 
+dietdat %>% ggplot(aes(x=wloss))+
+  geom_histogram(bins = 10) + facet_wrap(~diet,ncol=1)
+
+# Create a violin plot 
+dietdat %>% ggplot(aes(x=wloss,y=diet, color=diet))+
+  geom_violin() + geom_boxplot(width=0.15) + geom_point() 
+
+```
+
+(4) Fit a model using the `contr.sum` option for the `diet` variable. Write down the model that you are fitting. How does this compare with a model we could create from the `diet.means` dataframe above? 
+
+```{r}
+dietdat <- dietdat %>% mutate(diet.cont = diet)
+contrasts(dietdat$diet.cont) = contr.sum
+diet.lm <- dietdat %>% lm(wloss~diet.cont, data = .)
+summary(diet.lm)
+```
+`r colorize("answer", "blue")`. 
+
+(5) Verify that $\mu$ here is equal to the overall mean from the dataframe `dietdat`. Will this will always be the case with multiple means?   Does it make sense to use the "mean of the means"? Why?
+
+```{r}
+mean(dietdat$wloss)
+mean(diet.means$Mean)
+```
+`r colorize("answer", "blue")`. 
+
+
+(6) Calculate the total variability in the response variable (SST) and partition the total variability into its component parts (SSE and SSM). Verify that SST equals SSE+SSM.  Hint: See LSNs 3 and 4. 
+```{r Partition SST}
+SST <- sum((dietdat$wloss-mean(dietdat$wloss))^2); SST
+SSE <- sum((dietdat$wloss-diet.lm$fitted.values)^2); SSE
+SSM <- sum((diet.lm$fitted.values - mean(dietdat$wloss))^2); SSM
+  
+SST == SSE + SSM
+
+# Calculate R squared
+rsquared <- SSM/SST; rsquared 
+```
+
+(7) What can we conclude at this point? 
+
+`r colorize("We can only make an observation about the sample, not the population. ", "blue")`. 
+\vspace{0.3in}
+
+
+#### Step 4: Draw inferences beyond the data
+
+(8) We want to test some hypotheses so that we can make conclusions about the population, not just our sample. What are our hypotheses in words and 'symbols'? 
+\vspace{0.5in}
+
+`r colorize("The null hypothesis is there is no association between weight loss and diet type, the alternative hypothesis is that there is an association between weight loss and diet type.", "blue")`. 
+$$H_0: \mu_{Vegetarian} = \mu_{Keto} = \mu_{None}$$
+$$H_A: \mbox{at least one of the } \mu \mbox{ is different from the others.}$$
+
+
+(9) One statistic we can use to test this hypothesis is $R^2$. Assuming $H_0$ is true, create 5000 replicates of $R^2$. Plot the results. Do we have strong evidence against $H_0$? 
+
+```{r}
+M <- 5000
+stat <- rep(NA, M)
+for(i in 1:M){
+  dietdat$diet.shuff <- sample(dietdat$diet)
+  sim.lm <- dietdat %>% lm(wloss~diet.shuff,data=.)
+  stat[i] <- summary(sim.lm)$r.squared
+}
+data.frame(stat) %>% ggplot(aes(x=stat)) +
+  geom_histogram() +
+  geom_vline(xintercept = rsquared, color="red") 
+```
+
+`r colorize("Yes, we have strong evidence against the null hypothesis.", "blue")`. 
+
+(10) We can also use another statistic, the F-statistic. It is defined as follows: 
+$$F=\left[ \frac{R^2}{1-R^2} \right] \times 
+\left[ \frac{n-\#\, groups}{\# \, groups - 1} \right] = 
+\left[ \frac{SSM / df\, for\, model}{SSE / df\, for\, error} \right]$$
+
+Calculate the F-statistic for this model and data:
+
+\vspace{0.3in}
+
+
+
+```{r ANOVA 1}
+## Theory-based F-test
+n <- nrow(dietdat)
+dfmod <- 2           # We have three groups -> we estimate X group means
+dfred <- n-1-dfmod   # We have 180 observations-> estimate overall mean & estimate X group means
+Fstat <- (SSM/dfmod)/(SSE/dfred); Fstat
+Fstat <- rsquared/(1-rsquared)*(n-3)/(3-1); Fstat
+
+1 - pf(Fstat, dfmod, dfred)
+pf(Fstat,dfmod,dfred, lower.tail = FALSE)  # Right-tail test (Ha: greater than) 
+
+```
+
+
+(11) Be sure to check that the validity conditions have been satisfied before making any conclusions. Find the validity conditions on p. 80. Hint: you may find "resid_panel" from the package ggResidpanel useful.
+\vspace{0.5in}
+
+    * Validity condition #1: samples are independent of each other. 
+
+`r colorize("This is met in the study design. We assume that the adults do not interact in a way to skew any of the results of the study.", "blue")`.
+    \vspace{0.2in}
+    * Validity condition #2: standard deviations of treatment groups are similar (e.g. largest is not more than twice the size of the smallest).
+    
+`r colorize("The standard deviations of all three groups as shown in Step 3 above shows that the sds are are close in size.", "blue")`.
+    \vspace{0.2in}    
+    
+    * Validity condition #3: The distributions of the groups are approx symmetric (implying the distribution of the residuals is approximately normal) or all group sizes are larger than 20 with no extreme skewness or outliers. 
+  \vspace{0.2in}    
+`r colorize("We can check the distribution of the residuals for normality. Using the figure below, it looks like the groups are approximately normal", "blue")`.
+
+```{r Check validity Conditions, fig.height=3, fig.width=3, fig.align='center',message=FALSE, warning=FALSE}
+
+resid_panel(diet.lm, plots = c('hist'), bins = 20)   
+```
+
+
+(12) There is an easier way to conduct the F test using an R function. (Hint: use the "aov" function. ) Do these numbers look familiar? Discuss.
+
+```{r ANOVA 2, fig.height=3, fig.width=3, fig.align='center',message=FALSE, warning=FALSE}
+## Easier way to do F-test 
+diet.aov <- aov(wloss~diet, data = dietdat)
+summary(diet.aov)
+
+```
+ 
+\vspace{0.5in}
+ `r colorize("Yes, the 'Sum Sq' numbers look like the SSM and SSE calculated above; the 'Mean Sq' looks like the SSM and SSE divided by df, which can be used to calculate the 'F value'", "blue")`.
+
+
+
+(13)  Explain to a lay-person the premise for conducting hypothesis testing using the simulation-based approach for this scenario.
+\vspace{0.5in}
+
+ `r colorize("The simulation-based approach will simulate instances where the means are the same for the three groups and calculate an F-statistic for each simulation. We will estimate the p-value by counting the proportion of times the observed F statistics (from the simulation) are 'more extreme' than our calulcated F-statistic", "blue")`.
+
+
+#### Step 5: Formulate conclusions
+
+(14) Based on your analysis so far, summarize the conclusions you would draw from this study. Be sure to address statistical significance, generalizability, and causation. Also be sure to put your comments into the context of this research study.
+\vspace{0.5in}
+
+
+<br>
+
+#### Step 6: Look back and ahead
+
+(15) Suggest at least one way you would improve this study if you were to carry it, or a follow-up study, out yourself.
+\vspace{0.5in}
+
+(16) Create a sources of variation diagram.
+
+| Observed variation in: | Sources of explained variation: | Sources of unexplained variation: |
+|--|--|--|
+| weight loss (in kgs) | diet groups: keto, vegetarian, none | exercise level |
+| | | Age |
+| Inclusion criteria:  healthy adults | | "genetics" |
+| Design: randomized, zero-blind | | Unknown |
+

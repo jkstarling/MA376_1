@@ -1,0 +1,600 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{\vspace{-1.05in}
+
+Lesson 3: Afghan Schools (continued)}
+\author{\vspace{-.55in}
+
+LTC James K. Starling}
+\date{}
+
+\begin{document}
+\maketitle
+
+\hypertarget{notation}{%
+\subsubsection{Notation}\label{notation}}
+
+\begin{longtable}[]{@{}
+  >{\centering\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\centering\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\centering
+Notation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Definition
+\end{minipage} \\
+\midrule()
+\endhead
+\(i\) & group \\
+\(j\) & observation \\
+\(y_{i,j}\) & the response for the \(j^{th}\) observation from the
+\(i^{th}\) group \\
+\(\bar{y}\) & overall sample mean \\
+\(\bar{y}_i\) & sample mean of the \(i^{th}\) group \\
+\(n\) & total sample size \\
+\(n_i\) & group size of the \$i\^{}\{th\} group \\
+\bottomrule()
+\end{longtable}
+
+\hypertarget{background}{%
+\subsubsection{Background}\label{background}}
+
+Recall that in Lesson 2 we analyzed a data set of 1394 school children
+in northwestern Afghanistan. Researchers grouped 31 villages into 11
+equally sized village groups based on political and cultural alliances.
+Five of these village groups were then randomly assigned to establish a
+village based school.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\NormalTok{afghan }\OtherTok{=} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://raw.githubusercontent.com/jkstarling/MA376/main/afghan\_school.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{single-mean-model}{%
+\subsubsection{Single Mean Model}\label{single-mean-model}}
+
+A general single mean statistical model for predicting outcomes is:
+
+\[ y_{i,j}  = \mu + \epsilon_{i,j} \]
+\[ \epsilon_{i,j} \sim \text{iid} F(0,\sigma)\]
+
+For the Afghan Schools experiment, the fitted single mean model and the
+standard error of the residuals (SD of the response) are:
+
+\[\small\text{Predicted test score = }\hat{y}_i = 73.24 \text{ points;  SE of residuals = 11.14 points.}\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{single.model }\OtherTok{=} \FunctionTok{lm}\NormalTok{(test\_score}\SpecialCharTok{\textasciitilde{}}\DecValTok{1}\NormalTok{, }\AttributeTok{data =}\NormalTok{ afghan)}
+\FunctionTok{summary}\NormalTok{(single.model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = test_score ~ 1, data = afghan)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -16.244  -9.244  -1.244   7.756  23.756 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  73.2439     0.2984   245.4   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 11.14 on 1393 degrees of freedom
+\end{verbatim}
+
+\hypertarget{sum-of-squares-total-sstotal-and-standard-error-of-residuals}{%
+\subsubsection{Sum of squares total (SSTotal) and Standard Error of
+Residuals}\label{sum-of-squares-total-sstotal-and-standard-error-of-residuals}}
+
+The SSTotal represents the total variation in the residuals from the
+single mean model.
+
+\[SSTotal = \sum_{\text{all observation}}(\text{observed value - overall mean})^2\]
+
+\textbf{1) Calculate \texttt{SSTotal}.} \vspace{1in}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SSTotal }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{((afghan}\SpecialCharTok{$}\NormalTok{test\_score }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(afghan}\SpecialCharTok{$}\NormalTok{test\_score))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{SSTotal}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 172961.1
+\end{verbatim}
+
+\textbf{2) What is the sample size? Save this value as \texttt{n}.}
+\vspace{1in}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# all options below are the same}
+\NormalTok{n }\OtherTok{\textless{}{-}}\NormalTok{ afghan }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{tally}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull}\NormalTok{()}
+\NormalTok{n }\OtherTok{\textless{}{-}} \FunctionTok{pull}\NormalTok{(}\FunctionTok{tally}\NormalTok{(afghan))}
+\NormalTok{n }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(afghan}\SpecialCharTok{$}\NormalTok{test\_score)}
+
+\NormalTok{n}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1394
+\end{verbatim}
+
+\textbf{3) Calculate the standard error of the residuals and name it
+\texttt{SE.single}.} \vspace{1in}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SE.single }\OtherTok{\textless{}{-}} \FunctionTok{sqrt}\NormalTok{(SSTotal}\SpecialCharTok{/}\NormalTok{(n}\DecValTok{{-}1}\NormalTok{))}
+
+\NormalTok{SE.single}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 11.14291
+\end{verbatim}
+
+\hypertarget{multiple-separate-means-model}{%
+\subsubsection{Multiple (Separate) Means
+Model}\label{multiple-separate-means-model}}
+
+A general statistical model for predicting outcomes depending on which
+treatment group the experimental unit is assigned to is:
+
+\[\small{y_{ij} = \mu_j + \epsilon_{ij} \,\,\,\,\,\text{ where } i =  \text{ experimental unit and } j = \text{treatment group}}\]
+
+For the Afghan Schools experiment, the fitted multiple means model and
+the standard error of the residuals are:
+\[\small{\text{Predicted Score}} =  \hat{y}_i = \left\{
+\begin{array}{ll}
+      70.003 \text{ points, } &  \text{if traditional school (Control)} \\
+      76.485 \text{ points, } &  \text{if village school (Treatment)}
+\end{array} 
+\right.  \]
+
+\emph{SE of residuals = 10.66 points. What does this mean in relation to
+the two models?}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{multi.model }\OtherTok{=} \FunctionTok{lm}\NormalTok{(test\_score }\SpecialCharTok{\textasciitilde{}} \DecValTok{0} \SpecialCharTok{+} \FunctionTok{as.factor}\NormalTok{(treatment), }\AttributeTok{data =}\NormalTok{ afghan)}
+\FunctionTok{summary}\NormalTok{(multi.model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = test_score ~ 0 + as.factor(treatment), data = afghan)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -19.485  -9.003  -1.485   7.997  26.997 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(>|t|)    
+## as.factor(treatment)0   70.003      0.404   173.3   <2e-16 ***
+## as.factor(treatment)1   76.485      0.404   189.3   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 10.66 on 1392 degrees of freedom
+## Multiple R-squared:  0.9793, Adjusted R-squared:  0.9793 
+## F-statistic: 3.294e+04 on 2 and 1392 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{effect}{%
+\subsubsection{Effect}\label{effect}}
+
+The \textbf{effect} of each treatment is the difference of the mean
+response in the treatment group from the overall mean response.
+
+We can calculate the effect for each group by subtracting the overall
+mean from each group mean.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mean.sm }\OtherTok{\textless{}{-}}\NormalTok{ single.model}\SpecialCharTok{$}\NormalTok{coefficients}
+\NormalTok{mean0 }\OtherTok{\textless{}{-}}\NormalTok{ afghan }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(treatment}\SpecialCharTok{==}\StringTok{"0"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{summarise}\NormalTok{(}\FunctionTok{mean}\NormalTok{(test\_score)) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull}\NormalTok{()}
+\NormalTok{mean1 }\OtherTok{\textless{}{-}}\NormalTok{ afghan }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(treatment}\SpecialCharTok{==}\StringTok{"1"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{summarise}\NormalTok{(}\FunctionTok{mean}\NormalTok{(test\_score)) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull}\NormalTok{()}
+
+\CommentTok{\#Effect for treatment group}
+\NormalTok{mean1 }\SpecialCharTok{{-}}\NormalTok{ mean.sm}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## (Intercept) 
+##    3.241033
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Effect for control group}
+\NormalTok{mean0 }\SpecialCharTok{{-}}\NormalTok{ mean.sm}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## (Intercept) 
+##   -3.241033
+\end{verbatim}
+
+We can write the multiple means model in terms of an overall mean and
+the effects of the treatment group. See p.~47, Sect. 1.2: ``overall mean
++ treatment effect + random error''.
+
+\[\small{\text{Predicted Test Score}} =  \hat{y}_i = 73.24 + \left\{
+\begin{array}{ll}
+      -3.24, \text{ points, } &  \text{if traditional school (Control)} \\
+      3.24, \text{ points, } &  \text{if village school (Treatment)}
+\end{array} 
+\right.  \]
+
+\hypertarget{sum-of-squared-error-sserror-and-standard-error-of-residuals}{%
+\subsubsection{Sum of squared error (SSError) and Standard Error of
+Residuals}\label{sum-of-squared-error-sserror-and-standard-error-of-residuals}}
+
+The SSError represents the leftover variation in the response variable
+after accounting for the treatment group, i.e., the variation
+unexplained by the treatment groups.
+
+\[SSError = \sum_{\text{all obs}}(\text{observed value - predicted value})^2 = \sum_\text{all obs}residuals^2\]
+
+\textbf{4) Calculate the SSError for the above model. Hint: you can use
+\texttt{predict(model)} to obtain a predicted value for each
+observation.} \vspace{1in}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SSError }\OtherTok{=}\NormalTok{ afghan }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{predicted =} \FunctionTok{predict}\NormalTok{(multi.model)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\FunctionTok{sum}\NormalTok{((test\_score}\SpecialCharTok{{-}}\NormalTok{predicted)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull}\NormalTok{()}
+
+\NormalTok{SSError }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{((afghan}\SpecialCharTok{$}\NormalTok{test\_score }\SpecialCharTok{{-}}\NormalTok{ multi.model}\SpecialCharTok{$}\NormalTok{fitted.values)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{SSError}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 158318.1
+\end{verbatim}
+
+Note. The residuals are a object in each model you create. You can pull
+a vector of residuals from your model using \texttt{model\$residuals}.
+The code below uses this method to calculate SSError.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sum}\NormalTok{(multi.model}\SpecialCharTok{$}\NormalTok{residuals}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 158318.1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sum}\NormalTok{(}\FunctionTok{resid}\NormalTok{(multi.model)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 158318.1
+\end{verbatim}
+
+\textbf{6) Calculate the standard error of the residuals for the
+multiple means model and name it \texttt{SE.multi}.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SE.multi }\OtherTok{=} \FunctionTok{sqrt}\NormalTok{(SSError}\SpecialCharTok{/}\NormalTok{(n}\DecValTok{{-}2}\NormalTok{))}
+
+\NormalTok{SE.multi}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 10.66463
+\end{verbatim}
+
+\hypertarget{sum-of-squares-model-ssmodel.}{%
+\subsubsection{Sum of squares model
+(SSModel).}\label{sum-of-squares-model-ssmodel.}}
+
+The SSModel measures the variation in the group means from the overall
+mean.
+
+\[SSModel = \sum_{\text{all observation}}(\text{group mean - overall mean})^2 = \sum_{all groups}(\text{group size})\times(effect)^2\]
+
+\textbf{7) Calculate \texttt{SSModel}. Hint \texttt{predict()} provides
+the group mean for each observation in the multiple means model }
+\vspace{1in}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#summing across observations}
+\NormalTok{overall\_avg }\OtherTok{=}\NormalTok{ afghan }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{summarise}\NormalTok{(}\FunctionTok{mean}\NormalTok{(test\_score)) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull}\NormalTok{()}
+
+\NormalTok{SSModel }\OtherTok{=} \FunctionTok{sum}\NormalTok{((}\FunctionTok{predict}\NormalTok{(multi.model)}\SpecialCharTok{{-}}\NormalTok{overall\_avg)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{SSModel}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 14642.99
+\end{verbatim}
+
+\textbf{8) Verify your sum of squares calculations by ensuring the
+SSTotal = SSError + SSModel below.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SSTotal}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 172961.1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SSError}\SpecialCharTok{+}\NormalTok{SSModel}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 172961.1
+\end{verbatim}
+
+To summarize these calculations:
+
+\[SSTotal = SSModel + SSError,\]
+
+and given degrees of freedom (df) for a sum of squares calculation is
+the number of data points minus the number of parameters we need to
+estimate, i.e.,
+
+\[df(SSTotal) = df(SSModel) + df(SSError)\]
+
+Degrees of freedom represents the number of independent values in a sum.
+
+\textcolor{red}{Note: these output (SST, SSM, SSE and their df) are given in what is known as an ANOVA (analysis of variance) table. More on this will come later in the course.}
+
+The \textbf{coefficient of determination}, \(\small{R^2}\), is the
+proportion of the total variation in the response variable which is
+explained by the explanatory variable(s) in the model. Note that
+\(0< \small{R^2} <1\). Larger values of \(\small{R^2}\) indicate that
+more of the variation in the response is explained by the explanatory
+variable(s).
+
+\[\small{R^2}  = \frac{\text{SSModel}}{\text{SSTotal}} = 1-\frac{\text{SSError}}{\text{SSTotal}}\]
+
+\textbf{9) Calculate the \(R^2\) for the multiple means model.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rsquared }\OtherTok{=}\NormalTok{ SSModel}\SpecialCharTok{/}\NormalTok{SSTotal}
+
+\NormalTok{rsquared       }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.08466059
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{(SSError}\SpecialCharTok{/}\NormalTok{SSTotal)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.08466059
+\end{verbatim}
+
+\textcolor{red}{Note: We should NOT use the Rsquared value from the model without the intercept (separate means models).}
+
+\hypertarget{effect-size}{%
+\paragraph{Effect Size}\label{effect-size}}
+
+Larger \(\small{R^2}\) values indicate less unexplained variation in the
+response variable and more precise predictions. However, there is no set
+value for what makes an \(\small{R^2}\) value meaningful in a given
+scenario. Practical significance refers to whether the group differences
+are large enough to be of value in the scenario, and usually requires
+subject matter knowledge and/or something to which to compare the group
+differences.
+
+An \textbf{effect size} measure compares differences in group means to
+the standard error of the residuals. In this study, the difference in
+group means is just over half of one residual standard error which seems
+meaningful in this context.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#difference in group means}
+\NormalTok{treatment\_mean }\OtherTok{=} \FunctionTok{as.numeric}\NormalTok{(multi.model}\SpecialCharTok{$}\NormalTok{coefficients[}\DecValTok{2}\NormalTok{])}
+\NormalTok{control\_mean }\OtherTok{=} \FunctionTok{as.numeric}\NormalTok{(multi.model}\SpecialCharTok{$}\NormalTok{coefficients[}\DecValTok{1}\NormalTok{])}
+
+\NormalTok{diff }\OtherTok{=}\NormalTok{ treatment\_mean }\SpecialCharTok{{-}}\NormalTok{ control\_mean}
+\NormalTok{diff}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 6.482066
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Standard error of residuals for multiple mean model (same as SE.multi)}
+\NormalTok{SE }\OtherTok{=} \FunctionTok{summary}\NormalTok{(multi.model)}\SpecialCharTok{$}\NormalTok{sigma}
+\NormalTok{SE}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 10.66463
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{num }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{((multi.model}\SpecialCharTok{$}\NormalTok{fitted.values}\SpecialCharTok{{-}}\NormalTok{ afghan}\SpecialCharTok{$}\NormalTok{test\_score)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\NormalTok{SE }\OtherTok{\textless{}{-}} \FunctionTok{sqrt}\NormalTok{(num}\SpecialCharTok{/}\NormalTok{(n}\DecValTok{{-}2}\NormalTok{))}
+\NormalTok{SE}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 10.66463
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Effect size}
+\NormalTok{diff}\SpecialCharTok{/}\NormalTok{SE             }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.6078099
+\end{verbatim}
+
+\hypertarget{references}{%
+\section{References}\label{references}}
+
+Burde, Dana, and Leigh L Linden. ``Bringing Education to Afghan Girls: A
+Randomized Controlled Trial of Village-Based Schools.'' American
+Economic Journal: Applied Economics 5, no. 3 (July 2013): 27--40.
+\url{https://doi.org/10.1257/app.5.3.27}.
+
+\end{document}

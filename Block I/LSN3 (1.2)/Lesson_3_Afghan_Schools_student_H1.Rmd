@@ -1,0 +1,278 @@
+---
+title: 'Lesson 3: Afghan Schools (continued)'
+author: 'CDT: I.M. Smrt'
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Notation
+
+| Notation | Definition |
+| :-: | :-: |
+| $i$ | group|
+| $j$ | observation |
+| $y_{i,j}$ |the response for the $j^{th}$ observation from the $i^{th}$ group |
+| $\bar{y}$ | overall sample mean |
+| $\bar{y}_i$ | sample mean of the $i^{th}$ group |
+| $n$ | total sample size |
+| $n_i$ | group size of the $i^{th}$ group |
+
+
+### Background
+Recall that in Lesson 2 we analyzed a data set of 1394 school children in northwestern Afghanistan. Researchers grouped 31 villages into 11 equally sized village groups based on political and cultural alliances. Five of these village groups were then randomly assigned to establish a village based school.  
+
+```{r, message=FALSE, echo=TRUE}
+library(tidyverse)
+afghan = read_csv("https://raw.githubusercontent.com/jkstarling/MA376/main/afghan_school.csv")
+```
+
+
+### Single Mean Model
+A general single mean statistical model for predicting outcomes is:
+
+$$ y_{ij}  = \mu + \epsilon_{ij} $$
+$$ \epsilon_{ij} \sim \text{iid} \; F(0,\sigma)$$
+
+
+For the Afghan Schools experiment, the fitted single mean model and the standard error of the residuals (SD of the response) are:
+
+
+$$\small\text{Predicted test score = }\hat{y}_i = 73.24 \text{ points;  SE of residuals = 11.14 points.}$$ 
+
+```{r, message=FALSE, echo=TRUE}
+single.model = lm(test_score~1, data = afghan)
+summary(single.model)
+```
+<br>
+
+### Sum of squares total (SSTotal), Sum of squared error (SSError), and Standard Error of Residuals (SE)
+
+The SSError (SSE) is the sum of the squared prediction errors (residuals) for a particular model. 
+
+$$SSError = \sum_{\text{all obs}}(\text{observed value - predicted value})^2 = \sum_\text{all obs}residuals^2$$
+
+
+The SSTotal (SST) represents the sum of squared difference between the observed values and the overall mean.  Note that in the case of the single mean model, SSE = SST. 
+
+$$SSTotal = \sum_{\text{all observation}}(\text{observed value - overall mean})^2$$
+
+The Standard Error of the residuals (SE) is an estimate of the standard deviation of the residuals $\epsilon_{i,j}$. In general, the formula for SE is the square root of the SSE divided by the degrees of freedom of our model (to get an unbiased estimate of $\sigma^2$. The standard error of our residuals is one way to estimate how appropriate the model is for our data by comparing the SEs for different models. 
+
+$$ \small SE = \sqrt{\frac{SSE}{degrees of freedom}}$$
+
+
+**1) Calculate `SSE` for the single-means model and name it `SSTotal`.**
+\vspace{1in}
+
+```{r}
+ybar <- mean(afghan$test_score)
+SSTotal <- sum( (afghan$test_score - ybar)^2 )
+
+SSTotal
+```
+
+
+**2) Calculate the standard error of the residuals and name it `SE.single`. How many degrees of freedom do we have with the single-means model?**
+\vspace{1in}
+```{r}
+n <- length(afghan$test_score)
+dof.1 <- n-1
+SE.single <- sqrt(SSTotal / dof.1)
+
+SE.single
+```
+
+### Multiple (Separate) Means Model
+A general statistical model for predicting outcomes depending on which treatment group the experimental  unit is assigned to is:
+ 
+$$y_{ij} = \mu_i + \epsilon_{ij}$$ 
+$$ \epsilon_{ij} \sim \text{iid} \; F(0,\sigma)$$
+ 
+For the Afghan Schools experiment, the fitted multiple means model and the standard error of the residuals are:
+$$\small{\text{Predicted Score}} =  \hat{y}_i = \left\{
+\begin{array}{ll}
+      70.003 \text{ points, } &  \text{if traditional school (Control)} \\
+      76.485 \text{ points, } &  \text{if village school (Treatment)}
+\end{array} 
+\right.  $$
+
+**3) Recreate the multiple-means model in R that we did last class:**
+```{r}
+multi.model <- afghan %>% lm(test_score~0 + as.factor(treatment), data =.)
+summary(multi.model)
+```
+\vspace{1.0in}
+
+<br> 
+
+### Effects Model 
+
+This section in our book also proposes another model (see p. 47). This model incorporates the **effect** of each treatment, where the **effect** is the *difference of the mean response in the mean of each treatment group from the overall mean response*. We can calculate the effect for each group by subtracting the overall mean from each group mean.
+
+This model can be represented by:
+
+$$ y_{ij} = \mu + \alpha_i +  \epsilon_{ij}$$
+$$\alpha_i = \mu - \mu_i$$ 
+$$ \epsilon_{ij} \sim \text{iid} \; F(0,\sigma)$$
+
+How is this different than the multiple means model? 
+\vspace{1.0in}
+
+**4) Calculate the effects for both treatments. **
+
+```{r}
+gp0 <- afghan %>% filter(treatment=="0")
+gp1 <- afghan %>% filter(treatment=="1")
+gp0.mean <- mean(gp0$test_score)
+gp1.mean <- mean(gp1$test_score)
+eff0 <- gp0.mean - ybar
+eff1 <- gp1.mean - ybar
+print(c(eff0, eff1))
+```
+
+
+**5) Create this model in R and assign it to `eff.model`. What do we notice about the values we see in the summary output? **
+
+```{r}
+afghan <- afghan %>% mutate(treatment1 = as.factor(treatment))
+contrasts(afghan$treatment1) = contr.sum
+eff.model <- afghan %>% lm(test_score ~ treatment1, data = .)
+summary(eff.model)
+
+```
+
+We should get the result: (check the values for `contrasts` in the `afghan` dataframe)
+
+$$\small{\text{Predicted Test Score}} =  \hat{y}_i = 73.24 + \left\{
+\begin{array}{ll}
+      -3.24, \text{ points, } &  \text{if traditional school (Control)} \\
+      \phantom{-}3.24, \text{ points, } &  \text{if village school (Treatment)}
+\end{array} 
+\right.  $$
+
+To see what this model is fitting, consider the model:
+$$ y_{ij} = \mu + \alpha_i \, x_{ij} +  \epsilon_{ij}$$
+$$x_{ij} = \text{1 if observation } j \text{ is from a government school}, \text{-1 if observation } j \text{ is from a village school} $$
+$$ \epsilon_{ij} \sim \text{iid} \; F(0,\sigma)$$
+
+
+### Alternative (base R model)
+If we had created a model using only the linear model where the `treatment` is a categorical variable, we will get the following model: 
+$$ y_{ij} = \mu + \beta \, x_{ij} +  \epsilon_{ij}$$
+$$x_{ij} = \text{1 if observation } j \text{ is from a village school, 0 otherwise}$$
+$$ \epsilon_{ij} \sim \text{iid} \; F(0,\sigma)$$
+
+**7) Create a model with `treatment` as a categorical variable and assign it to `base.model`. What is $\mu$?**
+```{r}
+base.model <- afghan %>% lm(test_score~as.factor(treatment), data = .)
+summary(base.model)
+```
+\vspace{1.0in}
+
+
+
+**8) Calculate and verify that the SE for the multiple means model is 10.66 points. Name the output `SE.multi`. What is the degrees of freedom for this model? What does this mean in relation to the two models?***
+```{r}
+SSE0 <- sum((gp0$test_score - gp0.mean)^2)
+SSE1 <- sum((gp1$test_score - gp1.mean)^2)
+SSError <- SSE0 + SSE1
+
+dof.2 <- n-2
+
+SE.multi <- sqrt(SSError/dof.2)
+
+SE.multi
+```
+\vspace{1.0in}
+
+
+
+
+
+### Sum of squares model (SSModel).
+
+The SSModel measures the variation in the group means from the overall mean. This is also referred to as the sum of squares for the treatment.
+
+$$SSModel = \sum_{\text{all observation}}(\text{group mean - overall mean})^2 = \sum_{all groups}(\text{group size})\times(effect)^2$$
+
+**9) Calculate `SSModel`. Hint use `fitted.values` from the multiple means model. **
+\vspace{1in}
+```{r}
+#summing across observations
+SSModel <- sum((multi.model$fitted.values - ybar)^2)
+
+# or...
+SSModel <- length(gp0$test_score) * eff0^2 + length(gp1$test_score) * eff1^2
+
+SSModel
+```
+
+<br>
+
+**10) Verify your sum of squares calculations by ensuring the SSTotal = SSError + SSModel below.** 
+
+```{r}
+SSTotal
+
+SSError + SSModel
+```
+
+To summarize these calculations:
+
+$$SSTotal = SSModel + SSError,$$
+
+and given degrees of freedom (df) for a sum of squares calculation is the number of data points minus the number of parameters we need to estimate, i.e.,
+
+$$df(SSTotal) = df(SSModel) + df(SSError)$$
+
+Degrees of freedom represents the number of independent values in a sum.
+
+Note: these output (SST, SSM, SSE and their df) are given in what is known as an ANOVA (analysis of variance) table. More on this will come later in the course.
+
+<br>
+
+### Coefficient of Determination ($R^2$)
+The **coefficient of determination**, $\small{R^2}$, is the proportion of the total variation in the response variable which is explained by the explanatory variable(s) in the model. Note that $0< \small{R^2} <1$. Larger values of $\small{R^2}$ indicate that more of the variation in the response is explained by the explanatory variable(s).
+
+$$\small{R^2}  = \frac{\text{SSModel}}{\text{SSTotal}} = 1-\frac{\text{SSError}}{\text{SSTotal}}$$
+
+**11) Calculate the $R^2$ for the multiple means model.**  
+```{r}
+rsquared <- SSModel / SSTotal
+
+rsquared
+
+1-(SSError/SSTotal)
+```
+
+Note: We should NOT use the Rsquared value from the model without the intercept (separate means models).
+<br> 
+
+<br>
+
+# References
+
+Burde, Dana, and Leigh L Linden. “Bringing Education to Afghan Girls: A Randomized Controlled Trial of Village-Based Schools.” American Economic Journal: Applied Economics 5, no. 3 (July 2013): 27–40. https://doi.org/10.1257/app.5.3.27.
+
+
+
+
+
+
+
+
+

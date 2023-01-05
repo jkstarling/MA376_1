@@ -1,0 +1,226 @@
+---
+title: '\vspace{-1.0in} Lesson 6: Do Diets Really Work? (continued)'
+author: "CDT I.M.Smrt"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+
+```
+<br>
+
+### Background
+Recall that in Lesson 5 we investigated the impact diet (Vegetarian, Keto, and None) has on weight loss (kg lost).
+
+```{r Setup, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(ggResidpanel)
+
+## Load data
+dietdat <- read_csv('https://raw.githubusercontent.com/jkstarling/MA376/main/WeightLoss.csv')
+
+# glimpse(dietdat)
+#Change the data types accordingly.
+dietdat <- dietdat %>% mutate(diet = as.factor(diet)) %>%
+  mutate(exercise = as.factor(exercise))
+```
+
+
+(@) Before we move on, let's create a sources of variation diagram.
+
+| Observed variation in: | Sources of explained variation: | Sources of unexplained variation: |
+|--|--|--|
+| weight loss (in kgs) | diet groups: keto, vegetarian, none | exercise level |
+| | | Age |
+| Inclusion criteria:  healthy adults | | "genetics" |
+| Design: randomized, zero-blind | | Unknown |
+
+
+(@) We can also calculate the F statistic and find the p-value of the statistic using R:
+```{r}
+dietdat <- dietdat %>% mutate(diet.cont = diet)
+contrasts(dietdat$diet.cont) = contr.sum
+diet.lm <- lm(wloss~0+diet, data=dietdat)
+SST <- sum((dietdat$wloss - mean(dietdat$wloss))^2); #SST
+SSE <- sum((dietdat$wloss - diet.lm$fitted.values)^2); #SSE
+SSM <- sum((diet.lm$fitted.values - mean(dietdat$wloss))^2); #SSESST-SSE; #SSM
+n <- nrow(dietdat)
+dfmod <- 2          
+dfred <- n - dfmod - 1   
+Fstat <- (SSM/dfmod) / (SSE/dfred); Fstat
+
+pf(Fstat, dfmod, dfred, lower.tail = FALSE)  
+```
+
+
+
+(@) Remind ourselves how to conduct an ANOVA with R:
+```{r ANOVA 2}
+# one-way ANOVA
+diet.aov <- aov(wloss~diet, data = dietdat)
+summary(diet.aov)
+
+#alternative 
+diet.lm2 <- dietdat %>% lm(wloss~diet, data=.)
+anova(diet.lm2)
+
+```
+
+
+Based on the results of the F-test we concluded that the observed differences in mean weight loss among the diets is more than we would expect by chance alone. However, knowing there is a statistically significant association between diet and average kilograms lost does not tell us the entire story. 
+
+
+(@) What else might we want to know? 
+\vspace{0.5in}
+
+`r colorize("*Which population means are different? How much do they differ by?*", "blue")`
+
+(@) Let's draw a picture to help us visualize the various means. 
+\vspace{0.5in}
+```{r}
+dietdat %>% ggplot(aes(x=diet, y=wloss)) +
+  geom_boxplot() + stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="red", fill="red") + labs(title="boxlot of weight loss by diet type", y="weight loss (kg)")
+```
+
+
+
+(@) To figure this out, we conduct *post-hoc analyses*. Note: We only do post-hoc analyses when the F-test is statistically significant to protect against an inflated experiment-wise Type I error rate. What is Type I error? What happens to the experiment-wise Type I error rate as the number of comparisons increase?
+\vspace{0.5in}
+
+`r colorize("*Type I error is the decision to reject the null hypothesis when the null hypothesis is true. The experiement-wise Type I error rate will increase as the number of comparisons increases.*", "blue")`
+
+<br>
+
+#### A. All Pairwise Comparisons
+For this method we compare average kilograms lost for all possible diet pairs. There are different methods for this type of pairwise comparison, but our textbook uses the formula:
+$$\small \text{difference in means } (\bar{y}_i - \bar{y}_j) \pm \text{(Multiplier) (SE of Residuals)}  \times \sqrt{\tfrac{1}{n_i}+\tfrac{1}{n_j}}$$
+
+(@) For 95% confidence intervals the multiplier is approximately 2. Why? 
+
+`r colorize("The Empirical Rule (Page 89)! For a symmetric mound-shaped distribution approximately 68\\% of the values lie within one standard deviation of the mean; approximately 95\\% lie within two standard deviations of the mean. (and it is the t-distribution)", "blue")`. 
+
+\vspace{0.5in}
+
+
+There are other methods to compare the mean for one population to the mean of another, e.g., Bonferroni corrections and Tukey's Honest Significant Difference (TukeyHSD in R).
+
+**Note: when a confidence interval includes 0 (null hypothesized value), we do not have enough evidence to conclude there is a difference in the mean weight loss for the two diets.**
+
+
+(@) Calculate the 95% CIs for the pairwise comparisons between None and Keto. What is a potential problem with doing this for all 3 pair-wise comparisons, particularly at a 95% confidence level?  
+```{r}
+diet.mean <- dietdat %>% group_by(diet) %>% summarise(mn = mean(wloss), num=n())
+diet.mean
+```
+
+```{r}
+tstar <- qt(0.975, 120-2)
+se.est <- summary(diet.lm)$sigma
+low <- (diet.mean$mn[2] - diet.mean$mn[1]) - tstar * se.est * sqrt(2/60)
+upp <- (diet.mean$mn[2] - diet.mean$mn[1]) + tstar * se.est * sqrt(2/60)
+c(low, upp)
+```
+\vspace{0.3in}
+
+`r colorize("The Empirical Rule (Page 89)! For a symmetric mound-shaped distribution approximately 68\\% of the values lie within one standard deviation of the mean; approximately 95\\% lie within two standard deviations of the mean. (and it is the t-distribution)", "blue")`. 
+
+
+(@) Calculate the 95% confidence intervals for each pair using TukeyHSD. For which groups can we conclude there is a statistically significant difference in the average number of kilograms lost?  
+\vspace{0.5in}
+
+
+```{r Calculate all pairwise comparisons}
+TukeyHSD(diet.aov)
+```
+
+`r colorize("Vegetarian-Keto, Vegetarian-None", "blue")`.
+
+
+
+
+#### B. t- Confidence Intervals for Each Population Mean
+We can also calculate a confidence interval for each treatment group (diet group) using the formula:
+
+$$\small \bar{y}_i \pm \text{(Multiplier)} \times \frac{\text{SE of Residuals}}{\sqrt{n_i}}$$
+$$\small \bar{y}_i \pm t^*_{df,\alpha/2} \times \frac{\text{SE of Residuals}}{\sqrt{n_i}}$$
+
+
+(@) Which groups have statistically significant population mean weight loss?
+\vspace{0.5in}
+
+`r colorize("*Since zero is not in the confidence intervals for any of the diet groups, average weight loss is statistically significant for every diet.*", "blue")`
+
+```{r 95% CI For each mean}
+# Fit the Multiple Means Model
+confint(diet.lm)
+```
+
+(@) Lets try to figure out how to do this "by hand":
+```{r}
+diet.mean
+kmean <- diet.mean$mn[1];
+nmean <- diet.mean$mn[2];
+vmean <- diet.mean$mn[3];
+
+tstar <- qt(0.025, 180-3,lower.tail = FALSE)
+c(kmean - tstar*se.est / sqrt(60),kmean + tstar*se.est / sqrt(60))
+c(nmean - tstar*se.est / sqrt(60),nmean + tstar*se.est / sqrt(60))
+c(vmean - tstar*se.est / sqrt(60),vmean + tstar*se.est / sqrt(60))
+```
+
+(@) Interpret the confidence intervals.
+\vspace{0.5in}
+
+
+
+#### C. Prediction Intervals for a New Observational Unit
+A prediction interval is a range of values that predicts the value of a new observation based on the existing model. We can calculate a prediction interval using the formula:
+$$\small \bar{y_i }\pm \text{(Multiplier) (SE of Residuals)} \sqrt{1 + \tfrac{1}{n_i}}$$
+**Note the validity conditions for prediction intervals on the bottom of page 96**
+
+(@) Estimate a prediction interval for average kilograms lost for an individual who is on the Keto diet. Interpret the prediction interval. 
+\vspace{0.5in}
+
+```{r, Prediction interval}
+newobs.data <- data.frame(diet='Keto')
+predict(diet.lm, newobs.data, interval = 'prediction')  
+newobs.data <- data.frame(diet='None')
+predict(diet.lm, newobs.data, interval = 'prediction')  
+newobs.data <- data.frame(diet='Vegetarian')
+predict(diet.lm, newobs.data, interval = 'prediction')  
+```
+
+`r colorize("*We are 95\\% certain that a (future/new) individual who is on the Keto diet will lose between -3.9 and 12.5 kilos.*", "blue")`
+
+(@) Do the same "by hand".
+
+```{r}
+tstar <- qt(0.025, 180-3,lower.tail = FALSE)
+c(kmean - tstar*se.est*sqrt(1+1/60), kmean + tstar*se.est*sqrt(1+1/60))
+c(nmean - tstar*se.est*sqrt(1+1/60), nmean + tstar*se.est*sqrt(1+1/60))
+c(vmean - tstar*se.est*sqrt(1+1/60), vmean + tstar*se.est*sqrt(1+1/60))
+```
+
+
+(@) When we are making a prediction where is our 'uncertainty' coming from?
+\vspace{0.5in}
+
+`r colorize("*Prediction intervals take into account individual variations in weight loss and variations in weight loss between diets.*", "blue")` 
+
+**This is why prediction intervals tend to be wider than confidence intervals which only take into account the sample to sample variation in the sample mean.**
+
+(@) What happens to confidence intervals when we increase the confidence level to 99%? What if we increase sample size?
+
+`r colorize("*The predition interval will widen if we increase the confidence level to 99\\% since the multiplier will increase (to about 3). If we incrase the sample size, it will not have a significant affect as the square root value will only get closer to 1. *", "blue")` 

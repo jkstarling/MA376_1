@@ -1,0 +1,295 @@
+---
+title: "LSN 28 - Public Health Screening for Omega-3 (7.1)"
+author: "MA376 - LTC J.K.Starling"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.width=8, fig.height=4, message = FALSE, warning = FALSE)#, fig.show = "hide")
+library(tidyverse)
+library(GGally)
+library(boot)
+library(car)
+options(tinytex.verbose = TRUE)
+
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+# `r colorize("....", "blue")`  # use this to color text
+```
+
+### Intro
+
+(0) We tend to do students a disservice in statistics courses because the data is given to you perfectly clean and accurate.  This is, of course, not how life really works.
+
+
+For example, researchers were interested in how Omega-3 index values compare between the Framingham Heart study and different subsets of the U.S. population, so they collected data in seven cities.  That data look like:
+```{r}
+framing.dat <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/FraminghamOmega3.csv")
+
+# setwd("C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons_AY23-1/BlockIV_New/")
+# framing.dat <- read.csv("FraminghamOmega3.csv")
+
+head(framing.dat)
+```
+
+The first little bit of cleaning I'd do is change the name `Omega3...` for convenience
+
+```{r}
+framing.dat <- framing.dat %>% 
+  mutate(Omega3 = Omega3...) %>%
+  select(-`Omega3...`)
+```
+
+While this isn't necessary, it does help others read my code.  The next thing we might do is to determine if we have complete data.  If we don't and we just start calculating statistics we might do:
+
+```{r}
+mean(framing.dat$Omega3)
+```
+(1) And we see we have problems.  Why is R doing this?
+
+`r colorize("....", "blue")`
+
+\vspace{.5in}
+
+
+(2) To see how many observations have NAs in them we can do the following:
+
+```{r}
+complete<-complete.cases(framing.dat)
+sum(complete)
+nrow(framing.dat)
+```
+
+(3) What's happening here? Is this a big deal?
+
+`r colorize("We have 40 obsevations that are not complete. If we had a large number of individuals with missing O3 Index values it could reduce the sample size. The conclusions we make regarding the O3 levels could be different than if we had the individuals. ", "blue")`
+
+\vspace{0.5in}
+
+
+To examine which cases are missing data we can do:
+
+```{r}
+fram.complete <- framing.dat %>% drop_na()
+```
+
+Then we do:
+```{r}
+fram.mis<- framing.dat %>% filter(is.na(Omega3))
+```
+
+Now we've made two datasets, one of the missing data and one that is not missing.  The reason we are doing this is we want to explore what sort of missingness we have. 
+
+We will want to check to see if the distributions for the variables in the complete data set and the missing data are similar:
+
+```{r}
+t.test(fram.complete$Age,fram.mis$Age)
+```
+
+(4) So, perhaps there is some mechanism informing the missingness. What did we do above? What were the results? 
+
+`r colorize("....", "blue")`
+
+\vspace{0.5in}
+
+
+(5) We also could look at gender proportions for missing the Omega3 index.  How would we do this?
+
+`r colorize("We could create a 2x2 contingency table and then conduct a chi-squared test. To do this in R, we would need to create a new column/variable with an indicator variable where 1 is missing and 0 is not missing. We would create a table with the indicator variable for rows and the sex as the columns. We would then pass the table to the prop.test() function. We see that we have a p value of 0.1077 and we fail to reject the null hypothesis and say that there is not a difference for the number of missing values by sex.  ", "blue")`
+
+```{r}
+framing.dat <- framing.dat %>% mutate(MissingO3 = is.na(Omega3))
+contrasts(framing.dat$MissingO3)
+MissO3.tab <- table(framing.dat$MissingO3, as.factor(framing.dat$Sex))
+prop.test(MissO3.tab, correct=FALSE)
+```
+
+\vspace{1.0in}
+
+Since the percentage of missing values relatively small (40 / 2495 = 1.6 \%) we are probably ok just ignoring the missing data. 
+
+### A Second Dataset
+Let's look at another dataset.
+
+```{r}
+screen.dat <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/ScreeningsOmega3.csv")
+# screen.dat <- read.csv("ScreeningsOmega3.csv")
+
+screen.dat <- screen.dat %>%
+  mutate(Omega3=Omega3...) %>%
+  select(-Omega3...)
+head(screen.dat)
+```
+(6) What observations can we make on this data? 
+
+
+`r colorize("It looks like we may be missing a ton here. We also note that age is decimal (becuse the observers estimated age using actual birthdates). ", "blue")` 
+
+\vspace{0.5in}
+
+
+```{r}
+screen.full <- screen.dat %>% drop_na()
+screen.mis<- screen.dat %>% filter(is.na(Sex))
+c(nrow(screen.dat), nrow(screen.full), nrow(screen.mis))
+```
+
+(7) We can compare the two subsets of data. What do we notice about these results?  Why might there be missing values?
+
+```{r}
+screen.full %>% summarize(count=n(),mean.Omeg=mean(Omega3),sd.Omeg=sd(Omega3),mean.age=mean(Age),sd.age=sd(Age))
+screen.mis %>% summarize(count=n(),mean.Omeg=mean(Omega3),sd.Omeg=sd(Omega3),mean.age=mean(Age),sd.age=sd(Age))
+```
+
+`r colorize("It looks like the complete data set has more observations, higher mean Omega3, higher std dev.,  higher mean age, and lower std. dev. age. The missing variables were actually from the way the responses were collected; participants were reqired to give birthdate and blood for Omega-3 data, but biological sex was optional. ", "blue")` 
+
+\vspace{0.5in}
+
+
+(8) Due to a high sample size, if we were to form 95\% CI for Omega or Age, what could we say?
+
+`r colorize("Notice that since we have a large sample size, the denominator will be large, we can say that there is a difference between the two means since the CIs do not overlap. ", "blue")` 
+$$mean \pm t^* \times SE / \sqrt{n}$$
+
+\vspace{0.5in}
+
+
+
+(9) We continue to explore the data.... What do we see?  What should we do?
+
+```{r}
+screen.full%>%ggplot(aes(x=Omega3))+
+  geom_histogram() + 
+  geom_rug(sides="b") + theme_minimal()
+```
+
+`r colorize("We see that we have two observations with extereme outliers. With only 2 outliers and over 1000 observations, these 2 individuals will probably not have much impact on our analyses, but they should still be investigated to see whether they indicate any issues with the data collection process. The first question to ask is whether the observations are clearly in error or are they contextually plausible but just unusual? For example, a negative Omega-3 Index value (biologically impossible) needs to be thought of differently than a value of 18%. A second question to ask is whether there are reasons to consider the outliers as arising from a different population. Perhaps those two observations were the only two we had for teenagers. If we removed them from the dataset, we would again restrict the population to which we are willing to generalize. Or, if these observations were the only ones taken by a particular research assistant who quit later that day, we could be justified in removing them from the dataset.", "blue")` 
+
+\vspace{0.5in}
+
+(10) So now we want to get back to our research question.  Is there a difference between the two datasets?  Here's a way to combine the datasets and explore.  
+Is there is a difference in means? (again, why can I say this without finding a p-value?)
+
+```{r}
+screen.full<- screen.full %>% mutate(Study="S")
+fram.complete <- fram.complete %>% mutate(Study="F")
+fulldat <- bind_rows(screen.full,fram.complete)
+```
+
+```{r}
+fulldat %>% ggplot(aes(x=Omega3, y=Study))+
+  geom_boxplot() + labs(title = "Boxplot of Omega3 vs Study")
+```
+
+```{r}
+fulldat %>% group_by(Study)%>%
+  summarize(omega3.mean=mean(Omega3),sd=sd(Omega3),obs=n())
+```
+
+`r colorize("Since we have a large sample size, the CIs for both populations will not overlap and we can say that the populations are different. ", "blue")` 
+
+
+\vspace{.5in}
+
+(11) The table for statistics for Age for each study is given below. What is the implications of this table? 
+
+```{r}
+fulldat %>% group_by(Study)%>%
+  summarize(age.mean=mean(Age),sd=sd(Age),obs=n())
+```
+
+`r colorize("Since we have a large sample size, the CIs for both populations will not overlap and we can say that the populations are different. ", "blue")` 
+
+
+\vspace{.5in}
+
+
+(12) What does the below plot suggest for our analysis?
+
+```{r}
+fulldat %>% ggplot(aes(x=Age,y=Omega3))+
+  geom_point()+
+  stat_smooth(method="lm",se=FALSE) + labs(title = "Omega3 vs Age")
+  
+```
+
+`r colorize("There appears to be a linear relationship between omega 3 and age ", "blue")` 
+
+\vspace{.5in}
+
+(13) So we are building out our sources of variation diagram mentally.  What else could be impacting Omega 3?
+
+```{r}
+fulldat %>% ggplot(aes(x=Omega3, y=Sex))+
+  geom_boxplot()
+```
+
+`r colorize("So, now we could look at a statistical model to account for the fact that we might need to adjust for Sex and Age if we want to note the true differences in the studies.", "blue")` 
+
+\vspace{.5in}
+
+
+(14) What models could we build? 
+
+$$(omega3)_i = \beta_0 + \beta_1 (age)_i + \beta_2 (study)_i + \epsilon_i$$
+
+$$(omega3)_i = \beta_0 + \beta_1 (age)_i + \beta_2 (study)_i + \beta_3 (sex)_i + \epsilon_i $$
+
+\vspace{0.5in}
+
+(15) But we have another choice, we could put the missing `Sex` values back in to our dataset. 
+To add the `Sex` variable in R we have to change the `<NA>` values.
+
+```{r}
+screen.dat<- screen.dat %>% mutate(Study="S")
+fulldat.mod <- bind_rows(screen.dat,fram.complete)
+
+fulldat.mod <- fulldat.mod %>%
+  mutate(Sex=as.character(Sex))%>%
+  replace_na(list(Sex="Missing"))
+```
+
+
+(16) Now we are ready to go.  Again, in typical stats classes this is where we would \textit{start} our lesson... 
+What's our conclusions here?
+
+```{r,warning=FALSE,message=FALSE}
+omega.lm <- lm(Omega3~Age+Sex+Study,data=fulldat.mod)
+summary(omega.lm)
+Anova(omega.lm,type="III")
+```
+`r colorize("It appears that the variable Sex is not stastically significant. ", "blue")` 
+
+\vspace{0.5in}
+
+
+Are we done?
+
+```{r}
+omega.lm %>% ggplot(aes(x=.fitted,y=.resid)) +
+  geom_point()
+```
+
+(17) One thing to do here is to repeat the analysis with the outliers removed. Do our conclusions change?
+
+```{r}
+fulldat.removed <- fulldat.mod %>% filter(omega.lm$residuals<10)
+```
+
+```{r}
+omega.mod.lm <- lm(Omega3~Age+Sex+Study,data=fulldat.removed)
+summary(omega.mod.lm)
+Anova(omega.mod.lm,type="III")
+```
+`r colorize("The variable Sex is still not stastically significant, and actually did not improve. ", "blue")` 
+
+\vspace{0.5in}

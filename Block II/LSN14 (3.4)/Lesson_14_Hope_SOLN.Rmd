@@ -1,0 +1,280 @@
+---
+title: "Lesson 14: Hopelessness and Exercise"
+author: "LTC J.K.Starling"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+
+A recent study (Dunn et al., J. Cardiopulm. Rehab. Prevent., 2017) gathered data on patients who had recently had a heart attack requiring hospitalization. 
+Before patients were discharged from the hospital, patients took a series of surveys which included measures of chronic hopelessness. 
+Chronic hopelessness was measured based on a series of Likert scale questions which were averaged together yielding a Chronic Hopelessness score of 1–4. 
+Higher scores indicate a more hopeless feeling. 
+Researchers were interested in learning about whether exercise after a heart attack was associated with hopelessness levels eight months later. 
+Two-hundred and twenty-three (n = 223) patients have data measuring hopelessness eight months after hospitalization, as well as information about their exercise habits during the eight-month period following hospitalization. Exercise was classified as “Regular home exerciser” (exercised at home at least three times per week) or “Not regular home exerciser” (did not exercise at home at least three times per week).
+
+```{r message=FALSE, warning=FALSE}
+### Loading packages
+library(tidyverse)
+library(ggResidpanel)
+library(car)
+## Load data  
+hope <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/hopelessness8months_2group.txt', header = TRUE, stringsAsFactors = TRUE)
+
+# setwd('C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block II/LSN14/')
+# hope <- read.table('hopelessness8months_2group.txt', header = TRUE, stringsAsFactors = TRUE)
+
+# add effect coding for Exercise and BaselineGroup
+contrasts(hope$Exercise) <- contr.sum
+contrasts(hope$BaselineGroup) <- contr.sum
+```
+
+(1) State the null and alternative hypothesis for the research question to learn whether exercise after a heart attack was associated with hopelessness levels eight months later. Identify the explanatory and response variables, and whether they are categorical or quantitative.
+\vspace{0.5in}
+
+`r colorize("$H_0:$ There is not a genuine association between exercise and 8 month hopelessness in the population.  $H_a:$ There is a genuine association between exercise and 8 month hopelessness in the population. Explanatory variable – exercise, categorical Response variable – 8month hopelessness, quantitative", "blue")`
+
+
+
+(2) Was this an observational study or a randomized experiment? If the latter, are there any blocking variables to account for?
+
+`r colorize("Observational study, data was simply collected and no assignment was employed.", "blue")`
+
+\vspace{0.5in}
+
+(3) Plot the distributions of hopelessness 8 months after a heart attack between the two exercise levels. Also provide the mean, standard deviation, and count for each level of exercise. 
+
+Is there preliminary evidence to suggest that there is a relationship between exercise status and hopelessness level? What are the estimated effects for exercisers and non-exercisers?
+
+```{r}
+hope %>% ggplot(aes(x=hopelessness8, y = Exercise, color=Exercise)) + 
+  geom_boxplot() + 
+  labs(title="Boxplot of Exercise level vs Hopelessness", x='hopelessness rating') + 
+  stat_summary(fun=mean, geom="point", shape=3, size=5, color="red", fill="red") +
+  theme_classic()
+
+hopeless.means <- hope %>% group_by(Exercise) %>% summarise(n=n(), mn = mean(hopelessness8), sd = sd(hopelessness8))
+hopeless.means
+
+# estimated effects
+diff(hopeless.means$mn) / 2
+```
+
+`r colorize("Yes, the average exerciser has a hopelessness score that is 0.23 points lower than the average nonexerciser. Exercisers have an effect of -0.116 while non-exercisers have an effect of 0.116.", "blue")`
+
+\vspace{0.5in}
+
+
+### Single-variable model
+
+(4) Conduct a one-variable analysis evaluating the association between exercise and hopelessness 8 months after a heart attack and provide an ANOVA table. 
+
+How much of the variation in hopelessness scores is explained by whether or not the individual exercises? Save the sum of squared error total as `SST_ex`.
+
+```{r}
+hope.lm <- hope %>% lm(hopelessness8 ~ Exercise, data=.)
+summary(hope.lm)
+hope.anv <- anova(hope.lm)
+hope.anv
+SST_ex <- sum(hope.anv$`Sum Sq`)
+hope.anv$`Sum Sq`[1] / SST_ex
+```
+
+`r colorize("Exercise explains about 4.4% of the variation in hopelessness scores.", "blue")`
+
+\vspace{0.5in}
+
+### Two-variable model
+
+(5) Conduct a two-variable analysis evaluating the association between exercise and hopelessness 8 months after a heart attack and provide an ANOVA table. 
+
+Give the prediction equation and residual standard error. 
+
+What variables are significant (at the $\alpha = 0.05$ level)? (Load the package `car` and use `Anova(hope.lm2, type="3")`)
+
+```{r}
+hope.lm2 <- hope %>% lm(hopelessness8 ~ Exercise + BaselineGroup, data = .)
+summary(hope.lm2)
+# anova(hope.lm2)
+hope.anv2 <- Anova(hope.lm2, type="3")
+hope.anv2
+
+se2 <- sqrt(hope.anv2['Residuals','Sum Sq'] / hope.anv2['Residuals','Df'])
+se2
+```
+
+`r colorize("pediction hopelessness = 1.66 + ( (-0.1089 if exercise) (0.1089 if not exercise) + ( (-0.2068 if not hopeless) (0.2068 if moderate to severe))", "blue")`
+
+`r colorize("The residual standard error is 0.5058.", "blue")`
+
+`r colorize("Both variables are significant at the $\alpha = 0.05$ level. ", "blue")`
+
+\vspace{0.5in}
+
+
+(6) Provide the model $R^2$. What is the value of the covariation?  (Hint: You will need to use `SST_ex` calculated above.)
+
+```{r}
+SSexercise <- hope.anv2['Exercise','Sum Sq']
+SSbasegroup <- hope.anv2['BaselineGroup','Sum Sq']
+SSE <- hope.anv2['Residuals','Sum Sq']
+
+SScovariation2 <- SST_ex - SSexercise - SSbasegroup - SSE
+SScovariation2
+# rsquared
+(SSexercise + SSbasegroup + SScovariation2) / SST_ex
+SScovariation2
+```
+
+`r colorize("$R^2$ is 0.1825; SScovariation = 0.29.", "blue")`
+
+\vspace{0.5in}
+
+
+### Interaction
+
+(7) Create an interaction plot between Baseline hopelessness (x-axis) and Exercise (group \& color ). What story is being told with this graph? 
+
+```{r}
+hope.int <- hope %>% group_by(Exercise, BaselineGroup) %>% summarise(mn=mean(hopelessness8))
+
+hope.int %>% ggplot(aes(x=BaselineGroup, y = mn, group=Exercise, color=Exercise)) + 
+  geom_line() + geom_point() + 
+  labs(title="Interaction Plot of mean Hopelessness accouting for BaseLine Group and Exercise")
+```
+
+`r colorize("There is a larger difference in the 8 month hopelessness scores between exercisers and nonexercisers of those who are moderately to severely hopeless than those who are not hopeless. There appears to be an interaction between Exercise and BaselineGroup.", "blue")`
+
+\vspace{0.5in}
+
+
+(8) Conduct a two-variable analysis evaluating the association between exercise and hopelessness 8 months after a heart attack WITH INTERACTION. Provide an ANOVA table. 
+
+Give the prediction equation and residual standard error. 
+What variables are significant (at the $\alpha = 0.05$ level)?  
+What is the $R^2$ value? 
+
+```{r}
+hope.lm3 <- hope %>% lm(hopelessness8 ~ Exercise*BaselineGroup, data = .)
+summary(hope.lm3)
+hope.anv3 <- Anova(hope.lm3, type="3")
+hope.anv3
+
+se3 <- sqrt(hope.anv3['Residuals','Sum Sq'] / hope.anv3['Residuals','Df'])
+se3
+```
+
+`r colorize("With the addition of the interaction term the model still accounts for a significant amount of variation in the model. In context, the model utilizing exercise, baseline hopelessness, and the interaction between the two explains a significant amount of variation in 8 month hopelessness.", "blue")`
+
+`r colorize("$R^2=0.243$; SE resid = 0.488.", "blue")`
+
+\vspace{0.5in}
+
+
+(9) Explain how to get the degrees of freedom for SSM (not shown), SSexercise, SSBaselineGroup, SSinteraction, and SSresiduals. 
+
+`r colorize("Four total treatments, df model = 3 (4-1); 
+Two levels of exercise, df exercise = 1 (2-1); 
+Two levels of baseline of hopelessness, df baseline = 1 (2-1); 
+Interaction uses the remaining df of the model, df interaction = 1 (3-1-1); 
+df residuals = 170 (174 - 1 - 3).", "blue")`
+
+\vspace{0.5in}
+
+
+(10) What are the null and alternative hypotheses for the “model” F-test (with interaction)? What do you conclude about the model?
+
+`r colorize("$H_0$: The model does not explain variation in 8 month hopelessness.; $H_a$: The model explains variation in 8 month hopelessness. The F-statistic of 18.19 and $p$-value of < 0.0001 give very strong evidence to reject the null hypothesis.", "blue")`
+
+\vspace{0.5in}
+
+
+(11) What are the null alternative hypotheses for the interaction F-test? What do you conclude about the interaction between baseline hopelessness and exercise? What percentage of the variation in eight-month hopelessness is explained by this interaction? 
+
+`r colorize("$H_0$: The model does not explain variation in 8 month hopelessness.; $H_a$: The interaction term explains variation in 8 month hopelessness, after adjusting for exercise and baseline hopelessness.", "blue")`
+
+`r colorize("The F-statistic of 13.58 and p-value of 0.0003 for the interaction term give strong evidence to reject the null hypothesis. We have convincing evidence of an interaction effect in the population, with the interaction explaining approximately 6% of the variation in 8-month hopelessness.", "blue")`
+
+\vspace{0.5in}
+
+
+(12) Calculate the SS for the Model (SSM). What is the covariation of this model? How does it compare to the previous model?
+
+```{r}
+SScovariation3 <- SST_ex - 40.52 - 3.24 - 7.87 - 2.04; 
+SScovariation3 
+SScovariation3 <- SST_ex - sum(hope.anv3$`Sum Sq`[2:5]); 
+SScovariation3 
+```
+\vspace{0.5in}
+
+
+(13) How does the SSError change when comparing the two-variable model with and without the interaction? Why?
+
+`r colorize("The SSError decreases from 43.75 to 40.52 due to the increased amount of explained variation.", "blue")`
+\vspace{0.5in}
+
+
+(14) Discuss whether or not the validity conditions are met for this analysis. Cite specific characteristics of graphs or numbers from the output to support your statements.
+
+```{r}
+resid_panel(hope.lm3, plots = 'hist', bins = 15)
+hope %>% group_by(Exercise, BaselineGroup) %>% 
+  summarise(n=n(), mn=mean(hopelessness8), sd = sd(hopelessness8))
+# hope <- hope %>% unite('ExBase', 'Exercise', 'BaselineGroup', remove=FALSE)
+# hope %>% ggplot(aes(x=hopelessness8, color=ExBase)) + geom_boxplot()
+```
+
+`r colorize("1) The individuals were only recorded once in the study confirming independence. 2) Standard deviations are similar. 3) The distribution of the residuals is appx. normal. There is a slight right skewing though.", "blue")`
+
+\vspace{0.5in}
+
+
+(15) What are the null and alternative hypotheses for the “model” F-test? What do you conclude about the model?
+
+`r colorize("$H_0$: The model does not explain variation in 8month hopelessness. $H_a$:  The model explains variation in 8month hopelessness. The Fstatistic of 18.19 and pvalue of < 0.0001 give very strong evidence to reject the null hypothesis.", "blue")`
+
+\vspace{0.5in}
+
+
+(16) What are the null alternative hypotheses for the interaction F-test? What do you conclude about the interaction between baseline hopelessness and exercise? What percentage of the variation in eight-month hopelessness is explained by this interaction?
+
+`r colorize("$H_0$: The interaction term explains variation in 8-month hopelessness, after adjusting for the main effects.  $H_a$:  The interaction term explains variation in 8-month hopelessness, after adjusting for exercise and baseline hopelessness. The Fstatistic of 13.58 and pvalue of 0.0003 for the interaction term give strong evidence to reject the null hypothesis. We have convincing evidence of an interaction effect in the population, with the interaction explaining approximately 6% of the variation in 8-month hopelessness.", "blue")`
+
+
+\vspace{0.5in}
+
+** Bonus: How to do Type III SS w/o car package
+
+```{r}
+# from bottom of page: https://mcfromnz.wordpress.com/2011/03/02/anova-type-iiiiii-ss-explained/
+
+model <- hope %>% lm(hopelessness8 ~ Exercise*BaselineGroup, data = .)
+
+drop1(model, .~., test = "F")
+Anova(model, type = 3)
+
+# wrong way:
+aov(model)
+anova(model) 
+
+```
+
+
+
+
+

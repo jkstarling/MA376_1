@@ -1,0 +1,227 @@
+---
+title: "Lesson 10: Cars - Weight vs. Acceleration"
+author: "LTC J.K.Starling"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+
+
+
+```{r message=FALSE, warning=FALSE}
+### Loading packages
+library(tidyverse)
+library(ggResidpanel)
+## Load data  
+car <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/carmpg.txt', header = TRUE, stringsAsFactors = TRUE)
+
+# setwd('C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons_AY23-1/Block II/LSN10 (2.3)/')
+# car <- read.table('carmpg.txt', header = TRUE, stringsAsFactors = TRUE)
+
+```
+
+
+### (0): Recall that we discussed *confounding* earlier in our course. We can define confounding as...
+
+`r colorize("A variable that is related to both the explanatory variable and the response variable.", "blue")`
+
+`r colorize("Remember from last section, a blocking variable is potentially related to the response variable and is recorded by the researcher but is not manipulated by the researcher. They are similar, but not the same. One is used in the context of an experiement, while the other is used in the context of an observational study. ", "blue")`
+
+\vspace{0.3in}
+
+
+### (1): Today we will investigate the question, "Do heavier cars accelerate faster?"
+
+Here is some background on the data we will use: 
+
+One commonly cited metric in car commercials is the time it takes the car to accelerate from 0 to 60 mph. In this exploration, we will consider what car features might help explain faster acceleration (shorter times) using data on 406 cars (Quinlan, “Combining Instance-based and Model-based Learning,” Proceedings on the Tenth International Conference of Machine Learning, 236–243, 1993; used in the 1983 ASA Data Graphics Exposition). 
+The carmpg file contains data on the weight of the car (whether or not the car weighs over 2800 kg) and the time it takes to accelerate to 60 mph (measured in seconds). (This dataset has been around the internet for a while but details on the data collection are limited. We use the version with 392 complete records.)
+
+Was this an observational study or a randomized experiment? How do you know?
+
+`r colorize("Observational study, data was simply collected and no assignment was employed.", "blue")`
+
+\vspace{1in}
+
+
+### (2): What are the two main variables of interest to the study authors? Which of these is the response variable and which is the explanatory variable? Write down a good statistical model. 
+\vspace{1in}
+
+`r colorize("Accleration is the response variable and Vehicle weight is the explanatory var.", "blue")`
+
+`r colorize("$y = \\mu + \\alpha_i$ for the heavy or light vehicles, $i \\in \\{heavy, light \\}$", "blue")`
+
+
+### (3): Plot the distributions of acceleration times between light and heavy cars, and calculate the mean acceleration times for heavy and light cars. 
+
+Comment on the size and direction of the difference in means.  Explain why the direction of this association could be viewed by some as surprising. (Hint: Remember that smaller acceleration times are faster cars)  
+\vspace{1in}
+
+```{r}
+car %>% ggplot(aes(x = acceleration, fill = weight))+geom_histogram()+
+  facet_wrap(~weight, ncol = 1)+
+  theme_classic()
+
+car %>% group_by(weight) %>% summarise(mean(acceleration))
+16.3-14.8
+
+# car %>% ggplot(aes(x=acceleration, y = horsepower, color=weight)) + geom_boxplot()
+```
+
+`r colorize("Both light and heavy cars appear to have relatively normally distributed acceleration times. The mean of the heavy cars is slightly faster; this may be surprising as it implies the heavy cars actually tend to accelerate more quickly. ", "blue")`
+
+
+### (4): Conduct a one-variable analysis (multiple-mean model) evaluating the association between acceleration and car weight.  
+Is there a statistically significant relationship between acceleration time and car weight? (Note: use effect coding when creating your model)
+
+```{r}
+contrasts(car$weight) = contr.sum
+contrasts(car$weight)
+
+weight.mod <- lm(acceleration ~ weight, data=car)
+summary(weight.mod)
+wt.anova <- anova(weight.mod)
+wt.anova
+
+```
+
+`r colorize("Yes, there is a statistically significant relationship between acceleration and car weight.", "blue")`
+
+
+### (5): What proportion of variation in acceleration times is explained by whether or not the car is heavy? 
+From your anova table in question 4, calculate and save the SSTotal, SSE, and Rsquared values.
+\vspace{1n}
+
+```{r}
+SST_w <- sum(wt.anova$`Sum Sq`)
+SSE_w <- wt.anova$`Sum Sq`[2]
+SST_w <- 198.86+2777.17
+Rsquared_w <- wt.anova$`Sum Sq`[1] / SST_w
+Rsquared_w <- 198.86/SST_w
+Rsquared_w
+```
+
+`r colorize("Weight accounts for only 6.68% of the variation in acceleration time.", "blue")`
+
+
+### (6): Horsepower may also impact acceleration time. Even if this is not the main research question of interest, we might want to explain some of the unexplained variation using horsepower as a factor. 
+
+Calculate the means and number of observations, grouped by weight and horsepower. What do you notice about the sample sizes? What about the means compared to the overall mean? 
+
+```{r, message=FALSE, echo=TRUE}
+car %>% group_by(weight, horsepower) %>%
+  summarise(mn=mean(acceleration), n=n())
+mean(car$acceleration)
+
+car %>% group_by(horsepower) %>%
+  summarise(mn=mean(acceleration), n=n())
+mean(car$acceleration)
+
+(13.9+18)/2
+
+(13.7+16.5)/2
+```
+
+`r colorize("Our sample sizes are unbalanced. The mean of the heavy when taking into account the horsepower is higher than the overall mean. (lower for light weight)", "blue")`
+
+
+### (7): Nevertheless, let us ignore this fact and use the same approach we used in previous sections. First conduct a one-variable analysis evaluating the association between acceleration and horsepower. 
+
+```{r}
+contrasts(car$horsepower) = contr.sum
+contrasts(car$horsepower)
+
+h.mod <- lm(acceleration ~ horsepower, data=car)
+summary(h.mod)
+h.anova <- anova(h.mod)
+h.anova
+SST_h <- sum(h.anova$`Sum Sq`)
+SSE_h <- h.anova$`Sum Sq`[2]
+```
+
+### (8): If we were to conduct a two-variable analysis and there was no association between weight and horsepower we would expect the SSError to be decreased by the SSModel from the `hp.mod`. Is this the case?
+
+```{r}
+w.hp.mod <- lm(acceleration ~ weight+horsepower, data=car)
+summary(w.hp.mod)
+w.hp.anova <- anova(w.hp.mod)
+w.hp.anova
+SST_whp <- sum(w.hp.anova$`Sum Sq`)
+SSE_whp <- w.hp.anova$`Sum Sq`[3]
+
+```
+
+`r colorize("No the SSError is decreased by less than the SSModel in hp.mod (691 vs. 823).", "blue")`
+
+\vspace{0.3in}
+<br>
+
+### (9): Up to this point we have been calculating what are called **Type I Sums of Squares**.  These are done sequentially. We first find the Sums of Squares due to Factor A and then find the Sums of Squares due to Factor B *given that* factor A is in the model. 
+
+Create a new model `hp.w.mod` which reverses the order of the two explanatory variables. However, notice the difference between model 'w.hp.mod' and model 'hp.w.mod'. What do we notice? 
+
+```{r}
+hp.w.mod <- lm(acceleration ~ horsepower+weight, data=car)
+hp.w.anova <- anova(hp.w.mod)
+hp.w.anova
+SST_hpw = 823.18+67.14+2085.71; SST_hpw
+```
+
+`r colorize("Our Sums of Squares for weight (and horsepower) changed! This is because the only time we are doing 'Conditional Sums of Squares' is when our variable is the second variable in the model.", "blue")`
+
+
+
+### (10): We should calculate **Type III Sums of Squares**. Note that our statistical model does not change, but to get the appropriate ANOVA table we need `library(car)` installed (it provides the `Anova()` function).
+
+```{r, message=FALSE, echo=TRUE}
+#install.packages('car')
+library(car)
+w.hp.mod = lm(acceleration ~ weight+horsepower, data=car)
+summary(w.hp.mod)
+Anova3.wt.hp <- Anova(w.hp.mod,type=3)
+Anova3.wt.hp
+```
+
+### (11): An interesting note here is that the sums of squares no longer equal the total sums of squares. The extra sums of squares can be thought of as variation that cannot be disentangled from weight or horsepower. Our book calls this SSCovariation. It is variability that still exists but we cannot attribute it to either factor so we basically shrug our shoulders. Calculate the SSCovariation: 
+
+```{r}
+SST_A3 <- sum(Anova3.wt.hp$`Sum Sq`[-1])
+SSCovariation = SST_w - SST_A3
+SSCovariation
+```
+
+### (12): What proportion of variation in acceleration times is explained by this model? 
+
+```{r}
+(SSCovariation+67+691)/SST_w
+```
+
+`r colorize("This model explains 29.9 percent of the variation in acceleration times.", "blue")`
+
+
+# Type I Sums of Squares vs Type III Sums of Squares
+
+-  Type I: preferable when order matters. The factor we are more concerned with goes first. Used for 1 variable analysis and experiments with a balanced design.
+<br>
+
+- Type III: all effects are conditional on *everything else in the model*. Used for observational studies.  
+<br>
+
+### References
+Nathan Tintle et al.(2019). Intermediate Statistical Investigations.
+
+
+

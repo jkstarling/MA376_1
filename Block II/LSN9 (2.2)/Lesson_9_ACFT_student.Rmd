@@ -1,0 +1,208 @@
+---
+title: "LSN 9 - ACFT Sled Pull (2.2)"
+author: "CDT I. M. Smrt"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+
+library(tidyverse)
+```
+
+## Admin
+
+The Center for Data Analysis and Statistics (CDAS) at D/Math USMA was asked to consult on a project with DPE examining the surface that the sled pull was conducted on.  They wanted to demonstrate that there was an effect due to the surface.  They took 25 volunteers and had them do the sled pull on grass, turf, and sand. 
+
+1) Create a sources of variation diagram: 
+
+
+\vspace{1.5in}
+
+
+2) Consider the following boxplot. Explain what you see. 
+```{r}
+ACFT <- read.csv("https://raw.githubusercontent.com/jkstarling/MA376/main/ACFT.csv", stringsAsFactors = TRUE)
+ACFT <- ACFT %>% mutate(Participantf=as.factor(Participant)) %>% arrange(Surface, Participant)
+
+ACFT %>% ggplot(aes(x=Event, y=Surface, col=Surface)) + 
+  geom_boxplot() + stat_summary(fun=mean, geom="point", shape=20, size=5, color="red", fill="red") + geom_vline(aes(xintercept = mean(Event)), color="orange")
+```
+\vspace{0.5in}
+
+
+3) Consider the following output. Calculate the observed effects for each surface. What is the sum of all effects? 
+```{r}
+contrasts(ACFT$Surface)=contr.sum
+ACFT.mn.sd <- ACFT %>% group_by(Surface) %>% 
+  summarise(n=n(),mean=mean(Event),sd=sd(Event)); ACFT.mn.sd
+event.mn <- mean(ACFT$Event); event.mn
+```
+
+\vspace{.5in}
+
+
+```{r}
+# 
+```
+
+
+
+4) Consider the ANOVA table. How much variation is explained by Surface?  What does the p-value tell us?
+```{r}
+single.lm <- ACFT %>% lm(Event~Surface,data = .)
+anova(single.lm)
+```
+
+```{r}
+# 
+```
+
+
+\vspace{.5in}
+
+
+5) What other source of variation can we consider?
+
+
+\vspace{.3in}
+
+6) Based on the output below, does `participant` seem to matter?
+
+```{r}
+ACFT %>% group_by(Participantf) %>% 
+  summarise(n=n(),mean=mean(Event),sd=sd(Event)) %>% 
+  head(10)
+```
+
+\vspace{.3in}
+
+7) Can we consider this a blocked study design? What is our updated statistical model?
+
+\vspace{.5in}
+
+
+8) Consider the simulation below. Calculate the p-value, mean, and standard deviation from this simulation. Does this model take into account blocking? 
+```{r}
+set.seed(376)
+M<-1000
+stat <- rep(NA, M)  # create empty vector
+for(j in 1:M){
+  ACFT$shuffled.cat <- sample(ACFT$Surface)
+  shuff.lm <- ACFT %>% lm(Event~shuffled.cat,data=.)
+  stat[j] <- anova(shuff.lm)$"F value"[1]
+}
+```
+
+```{r}
+# 
+```
+
+
+\vspace{.5in}
+
+9) Consider another simulation which takes into account the blocking by participant. What is going on in this code?  What happens to the mean/sd of our F distribution? How rare is our F value now? What is our conclusion?
+
+```{r}
+set.seed(376)
+M<-1000
+stat <- rep(NA, M)  # create empty vector
+for(j in 1:M){
+  ACFT.mod <- ACFT %>% group_by(Participantf) %>% sample_n(3)
+  ACFT.mod$shuffled.cat <- rep(c("S","T","G"),25)
+  shuff.lm <- ACFT.mod %>% lm(Event~shuffled.cat,data=.)
+  stat[j] <- anova(shuff.lm)$"F value"[1]
+}
+```
+
+```{r}
+# 
+```
+
+\vspace{.4in}
+
+
+10) Calculate the Participant (block) effect for our participants. Did we impose a `sum to zero constraint'? 
+
+```{r}
+effects <- ACFT %>% group_by(Participantf) %>% 
+  summarise(effect=mean(Event)-mean(ACFT$Event)) %>% 
+  pull(effect)
+effects
+```
+
+```{r}
+# 
+```
+\vspace{.4in}
+
+11) Consider the adjusted surface effects below. How does the variance of the block-adjusted values compare to the original values?  Do the group means change?
+
+```{r}
+adj.effect <- ACFT %>% mutate(person.means = rep(effects,3)) %>%
+  mutate(adjeffect = Event-person.means)
+var(adj.effect$adjeffect)
+var(ACFT$Event)
+
+adj.effect %>% group_by(Surface) %>% summarise(means=mean(adjeffect),sd=sd(adjeffect))
+```
+
+\vspace{.4in}
+
+12) Our block-adjusted F-statistic and simulated F-statistics are given below. Calculate the p-value for the simulation. What do you notice about the values in the row associated with the `Participantf` variable? 
+
+```{r}
+adj.mod <- lm(adjeffect ~ Surface + Participantf, data = adj.effect)
+anova(adj.mod)
+```
+
+```{r}
+set.seed(376)
+M<-1000
+stat <- rep(NA, M)  # create empty vector
+for(j in 1:M){
+  adj.effect$shuffled.cat <- sample(adj.effect$Surface)
+  shuff.lm <- adj.effect %>% lm(adjeffect ~ shuffled.cat + Participantf, data=.)
+  stat[j] <- anova(shuff.lm)$"F value"[1]
+}
+```
+
+```{r}
+# 
+```
+
+
+\vspace{0.5in}
+
+
+13) Are validity conditions met for using F-distribution for our F statistic in this study? Why/why not?
+
+\vspace{2.in}
+
+
+14) Compare the ANOVA Table for the model with blocking with the ANOVA table from the adjusted model and the original model. What do you notice about the SST for each model? What about the MSE? ($MSE=\frac{SSE}{df}$)
+
+```{r}
+full.lm<-lm(Event~Surface+Participantf,data=ACFT)
+anova(full.lm)
+anova(adj.mod)
+anova(single.lm)
+```
+
+\vspace{2.in}
+
+15) So, should we always block?  If we create blocks and there are no true block effects, what happens to our F statistic?
+
+\vspace{1.in}

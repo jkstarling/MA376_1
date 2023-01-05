@@ -1,0 +1,268 @@
+---
+title: 'Lesson 12: Pistachios (3.2)'
+author: 'LTC James K. Starling'
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+#### Review
+(-2) What did we talk about in the previous lesson? Can you write out a mathematical representation of the model?  
+
+
+\vspace{0.25in}
+
+(-1) What is the null and alternative hypothesis with a multi-factor experiment? 
+
+
+
+\vspace{0.25in}
+
+
+
+In this chapter we're going to talk about *interactions* in multi-factor designs.  
+
+**Background**:
+Pistachios imported from the Middle East are cleaned and bleached with peroxide to turn them white. Some governments have banned bleaching over concerns of health risks; others have explored the impact on the health benefits of pistachios. Researchers (Gazor & Minaei, Dry. Technol., 2005) wanted to investigate the effects of the air velocity of the fan and the drying temperature of the oven on the amount of peroxide which remains (as a percentage) on the pistachios after the bleach process. Two values of air velocity (1.5 and 2.5 mph) and two values of drying temperature (60° and 90°F) were investigated. A full factorial design was conducted such that five batches, each consisting of 24 ounces of nuts, were randomly assigned to each treatment. We would like to determine the optimal settings of temperature and air velocity to minimize the percentage of peroxide remaining.
+
+
+```{r Setup, message=FALSE, echo=FALSE, warning=FALSE}
+## Load package(s) and data
+library(tidyverse)
+library(ggResidpanel)
+## Load data  
+pist.dat <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/pistachioStudySubset.txt', header = TRUE, stringsAsFactors = TRUE)
+
+# setwd('C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block II/LSN11/')
+# pist.dat <- read.table('pistachioStudySubset.txt', header = TRUE, stringsAsFactors = TRUE)
+
+pist.dat <- pist.dat %>% 
+  mutate(Temperature = as.factor(Temperature), AirVelocity = as.factor(AirVelocity))
+
+```
+
+(1) Create a sources of variability diagram. What were the response variables and the explanatory variable(s)? How are these variables classified?  How many treatments do we have? 
+
+
+\vspace{0.25in}
+
+
+(2) Are any of these explanatory variables blocking variables? Why or why not. 
+
+
+\vspace{0.25in}
+
+
+(3) We are treating temperature and air velocity as factors and not as continuous random variables. What is a downside of this? 
+
+
+\vspace{0.25in}
+
+(4) Conduct a two-variable ANOVA with a two-factor model (use effect coding). 
+Calculate the percent of variation explained by each explanatory variable and the overall model. 
+
+
+
+```{r}
+pist.dat2 <- pist.dat
+contrasts(pist.dat2$Temperature) <- contr.sum
+contrasts(pist.dat2$AirVelocity) <- contr.sum
+
+pist.lm <- lm(Peroxide~ Temperature + AirVelocity, data=pist.dat2)
+pist.anv <- anova(pist.lm);
+pist.anv
+
+SST <- sum(pist.anv$`Sum Sq`)
+rsq.temp <- pist.anv$`Sum Sq`[1] / SST; rsq.temp
+rsq.av <- pist.anv$`Sum Sq`[2] / SST; rsq.av
+rsq.mod <- (pist.anv$`Sum Sq`[1] + pist.anv$`Sum Sq`[2])/ SST; rsq.mod
+
+```
+
+
+
+\vspace{0.5in}
+
+
+(5) What is the fitted, two-variable, statistical model?   
+Which effects are statistically significant? 
+According to the model, which combination is the best? (lower `Peroxide` level is better)
+
+```{r}
+summary(pist.lm)
+```
+
+
+\vspace{0.25in}
+
+
+(6) According to the model, which combination is the best? (lower `Peroxide` level is better)
+
+```{r}
+pred.means <- data.frame(Temperature = c(60,   60,  90, 90),
+                         AirVelocity = c(1.5, 2.5, 1.5, 2.5),
+                         mn = c(NA, NA, NA, NA))
+pred.means[1,'mn'] <- predict(pist.lm, data.frame(Temperature='60',AirVelocity= '1.5'))
+pred.means[2,'mn'] <- predict(pist.lm, data.frame(Temperature='60',AirVelocity= '2.5'))
+pred.means[3,'mn'] <- predict(pist.lm, data.frame(Temperature='90',AirVelocity= '1.5'))
+pred.means[4,'mn'] <- predict(pist.lm, data.frame(Temperature='90',AirVelocity= '2.5'))
+pred.means
+```
+
+\vspace{0.25in}
+
+
+
+(7) Calculate the means for each combination of Temperature and AirVelocity using the `group_by()` and `summarise()` commands. Is this contrary to our model predictions above? 
+
+```{r}
+pist.means <- pist.dat %>% group_by(Temperature, AirVelocity) %>%
+  summarise(mn=mean(Peroxide)) %>% as.data.frame()
+pist.means
+```
+
+
+\vspace{0.25in}
+
+
+(8) This is evidence of a **Statistical Interaction**. An interaction means that the effect is modified by the presence of another variable. In our experiment, if the temperature is 60, then it’d be more advantageous to have an air velocity of 2.5, but if the temperature is 90, then it’d be more advantageous to have an air velocity of 1.5.
+
+Note that we are not saying that Air Velocity and Temperature are confounders. 
+If we know the air velocity do we gain any knowledge of the temperature?
+
+\vspace{0.25in}
+
+
+(9) How do we update our sources of variation diagram now?  
+What is our updated statistical model? 
+What is our null and alternative hypotheses? 
+
+\vspace{0.45in}
+
+
+(10)  Use the `pist.means` dataframe and  use the pipe command and `ggplot()` + `geom_line()` + `geom_point()` + (other stuff that makes sense) to create an interaction plot.
+
+If there were no interaction effects, what would we expect the lines to look like? 
+
+```{r}
+p <- pist.means %>% ggplot(aes(x=Temperature, y=mn, group= AirVelocity, color=AirVelocity)) +
+  geom_line() +
+  geom_point() +
+  labs(title="Interaction Plot", y="mean peroxide %")
+p
+```
+
+
+\vspace{0.25in}
+
+
+(11) Using the previous figure, add horizontal lines accounting for the effect of the air velocity and (separately) the effects of temperature. Use `geom_hline` to plot. 
+What do you notice about dashed lines compared to the means? 
+
+```{r}
+mod.mean <- coef(pist.lm)[1];
+temp.adj <- coef(pist.lm)[2];
+av.adj <- coef(pist.lm)[3];
+
+p + geom_hline(yintercept = mod.mean, linetype = "dashed") +
+  geom_hline(yintercept = mod.mean - av.adj, linetype = "dashed") +
+  geom_hline(yintercept = mod.mean + av.adj, linetype = "dashed") +
+  labs(title="Interaction Plot with effects of AirVelocity")
+
+p + geom_hline(yintercept = mod.mean, linetype = "dashed") +
+  geom_hline(yintercept = mod.mean - temp.adj, linetype = "dashed") +
+  geom_hline(yintercept = mod.mean + temp.adj, linetype = "dashed") +
+  labs(title="Interaction Plot with effects of Temperature")
+```
+
+
+
+(12) Using the `pist.means` table, calculate the `difference in the differences`. How do you interpret this answer? 
+```{r}
+pist.means
+
+# diff of diffs degrees
+dd.deg <- (pist.means$mn[1] - pist.means$mn[2]) - 
+          (pist.means$mn[3] - pist.means$mn[4])
+dd.deg
+
+# diff of diffs AirVelocity
+dd.av <- (xxx - xxx) - (xxx - xxx)
+dd.av
+```
+
+
+\vspace{0.5in}
+
+
+(12) To see if this statistic is significant, we can simulate the distribution under $H_0$ ($\alpha = \beta = 0$). How rare is it to observe something greater than 3.24?
+
+```{r, warning=FALSE, message=FALSE}
+set.seed(376)
+options(dplyr.summarise.inform = FALSE)
+
+M <- 1000
+stats <- rep(NA, M)
+for(i in 1:M){
+  pist.dat.shuff <- pist.dat
+  pist.dat.shuff$temp.shuf <- sample(pist.dat.shuff$Temperature)
+  pist.dat.shuff$av.shuff <- sample(pist.dat.shuff$AirVelocity)
+  p.shuff <- pist.dat.shuff %>% group_by(temp.shuf, av.shuff) %>%
+    summarise(mean.perox=mean(Peroxide))
+  stats[i] <- (p.shuff$mean.perox[1] - p.shuff$mean.perox[2]) -
+              (p.shuff$mean.perox[3] - p.shuff$mean.perox[4])
+}
+as.data.frame(stats) %>% ggplot(aes(x=stats)) + geom_histogram(bins = 50) + geom_vline(xintercept = dd.deg, color = 'red')
+sum(stats > dd.deg) / M
+```
+
+\vspace{0.25in}
+
+
+(13) Verify the numbers of the interaction effects by using a linear model. Where do the interaction effects show up here? 
+
+```{r}
+pist.int.lm <- pist.dat2 %>% lm(Peroxide~Temperature * AirVelocity, data=.)
+summary(pist.int.lm)
+anova(pist.int.lm)
+
+```
+
+
+
+\vspace{0.25in}
+
+(14) How does the ANOVA output change from our first model `pist.lm` to the model with interactions `pist.int.lm`? What happens to the residuals (SSE, MSE)? 
+
+```{r}
+anova(pist.lm)
+anova(pist.int.lm)
+```
+
+
+\vspace{0.25in}
+
+
+(15) We can now use the post-hoc test to see which of the interactions is significant. 
+
+```{r}
+# TukeyHSD(aov(xxx ~ xxx * xxx, data = pist.dat2))
+```
+
+
+\vspace{0.25in}
+
+

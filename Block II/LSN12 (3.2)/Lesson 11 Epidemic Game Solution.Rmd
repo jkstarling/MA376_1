@@ -1,0 +1,219 @@
+---
+title: "Lesson 11 Solution"
+author: "LTC James K. Starling"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+## Introduction
+
+This lab is based on data from an online game, Epidemic (https://stat2games.sites.grinnell.edu/). In this game, there is an outbreak of new viruses. Two potential medicines are currently being tested to stop the viruses from spreading. We will refer to these medicines as the Red Medicine and the Blue Medicine. Both have shown some evidence of success when compared against a placebo. However, neither is 100% effective and more testing is needed to determine which treatment is best. Your task is to determine the best treatment strategy to stop the spread of the viruses.
+
+* Download the Epidemic Data from Teams. 
+* Import the dataset into R and filter it to include only observations from Level 1.
+* Use the Count and Destroyed variables to create a new variable PercentDestroyed.
+* Organize your R code so that plots appear in the order that they are requested in this prompt.
+* Ensure all plots have informative axes and titles.
+* Use comments to indicate the task, subsection, and question number you are answering.
+
+```{r}
+# Load packages and data
+library(tidyverse)
+library(ggResidpanel)
+
+# epidemic <- read_csv("https://raw.githubusercontent.com/jkstarling/MA376/main/epidemicdata.csv")
+setwd("c:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons/Block II/LSN11/")
+epidemic <- read_csv("epidemicdata.csv")
+
+# Filter to only use observations from Level 1
+level1 <- epidemic %>% 
+  filter(Level == "1") 
+
+# Create new variable PercentDestroyed
+level1 <- level1 %>% 
+  mutate(percDestroyed = Destroyed/Count,
+         Medicine = as.factor(Medicine),
+         Virus = as.factor(Virus),
+         Location = as.factor(Location))
+```
+
+
+## TASK #1 Explore the Data
+
+### Analysis of Medicine Type
+
+1.Plot the effectiveness of the Medicines using PercentDestroyed as the response variable. Does one medicine seem better than the other?
+
+```{r}
+level1 %>% 
+  ggplot(aes(x = Medicine, y = percDestroyed)) +
+  geom_boxplot()+
+  theme_classic()
+```
+\vspace{0.5in}
+
+`r colorize("Not really.  They appear to have the same effectiveness.", "blue")`
+
+
+2.Modify the plot from question 1 to explore whether the effectiveness of the medicines depends on the Type of Virus. What are your conclusions?
+
+```{r}
+level1 %>% 
+  ggplot(aes(x = Medicine, y = percDestroyed, fill=Virus)) + 
+  geom_boxplot()+
+  theme_classic()
+# level1 %>% 
+#   ggplot(aes(x = Medicine, y = percDestroyed)) + facet_wrap(~Virus) +
+#   geom_boxplot()+
+#   theme_classic()
+```
+\vspace{0.5in}
+
+`r colorize("Medicine B appears to be more effect against the blue virus while medicine red appears to be more effective against the red virus.", "blue")`
+
+
+### Analysis of Turret Location
+
+3.Produce a plot of effectiveness of the Locations using PercentDestroyed as the response variable. Does location seem to matter?
+
+```{r}
+level1 %>% 
+  ggplot(aes(x = Location, y = percDestroyed)) +
+  geom_boxplot()
+```
+
+\vspace{0.5in}
+
+`r colorize("Yes.  Turret location 1 seems to be the most effective while turrets 2, 3, and 4 are less effective in order.", "blue")`
+ 
+
+4.Modify the plot from question 3 to explore whether the effectiveness of the locations depends on the Type of Virus. What are your conclusions?
+
+```{r}
+level1 %>% 
+  ggplot(aes(x = Location, y = percDestroyed, fill = Virus)) +
+  geom_boxplot()
+```
+\vspace{0.5in}
+
+`r colorize("Effectiveness is relatively similar for both viruses for each location.", "blue")`
+
+
+### Preliminary Conclusions
+
+5.Based on the results from this preliminary analysis, what location and medicine combinations do you think are most effective. Why?
+\vspace{0.5in}
+
+`r colorize(".... ", "blue")`
+
+## TASK #2 Draw Inferences Beyond the Data
+
+### Two-variable model (with no interaction)
+
+1.Use R to fit a model on `percDestroyed` with the main effects of `Location` and `Medicine` with no interaction. Your code should include both a regression and ANOVA table.
+
+```{r}
+two_var.lm <- lm(percDestroyed ~ Medicine + Location, data = level1)
+summary(two_var.lm)
+anova(two_var.lm)
+
+level1.2 <- level1
+contrasts(level1.2$Medicine) = contr.sum
+contrasts(level1.2$Location) = contr.sum
+
+two_var.lm2 <- lm(percDestroyed ~ Medicine + Location, data = level1)
+summary(two_var.lm2)
+anova(two_var.lm2)
+```
+
+2.Write the appropriate hypotheses for the model in words.
+\vspace{0.5in}
+
+`r colorize("$H_0:$ There is no difference in the mean percent destroyed for these four treatments
+$H_a:$ At least one long-run treatment mean differs from the others.", "blue")`
+
+
+3.Are the model assumptions met? Be sure your code includes the appropriate plots to support your answer.
+
+```{r}
+level1 %>% 
+  group_by(Medicine, Location) %>% 
+  summarize(SD = sd(percDestroyed))
+
+resid_panel(two_var.lm, plots = c('hist','resid'))
+```
+\vspace{0.5in}
+
+`r colorize("The residuals appear to be normally distributed but the largest sd is larger than twice the smallest sd.", "blue")`
+
+4.What are your conclusions? Is effectiveness in defeating the virus impacted by location and/or medicine type?
+\vspace{0.5in}
+
+`r colorize("Yes.  Both Location and Medicine type have a significant association with effectiveness.  This is shown by the high F-stat >4 and small p-values <0.05.", "blue")`
+
+
+### Interaction model
+
+5.A friend tells you an interaction between location and medicine means there is an association between location and medicine. Is your friend correct? Explain.
+\vspace{0.5in}
+
+`r colorize("No. An interaction between location and medicine means that the effect of one variable on effectiveness is modified by the value of the other variable.  ", "blue")`
+
+
+6.Use R to fit a model with the main effects of location and medicine with an interaction. Your code should include both a regression and ANOVA table.
+
+```{r}
+interact.lm <- lm(percDestroyed ~ Medicine*Location, data = level1)
+summary(interact.lm)
+anova(interact.lm)
+#or
+summary(aov(percDestroyed~Medicine*Location, data = level1))
+```
+
+7.Write the appropriate hypotheses for the model in words.
+\vspace{0.5in}
+
+`r colorize("$H_0:$ There is no interaction between location and medicine.
+$H_a:$ There is an interaction between location and medicine.", "blue")`
+
+
+8.Are the model assumptions met? Be sure your code includes the appropriate plots to support your answer.
+
+```{r}
+resid_panel(interact.lm, plots = c('hist', 'resid'))
+```
+\vspace{0.5in}
+
+`r colorize("Yes.  The residuals appear to be normally distributed and spread of the residuals is reasonably similar.", "blue")`
+
+
+9.Is there a significant interaction between location and medicine? If not, are either of the main effects significant?
+\vspace{0.5in}
+
+`r colorize("Yes. There is a significant interaction and the main effects for both location and medicine are both significant.", "blue")`
+
+
+### Conclusions
+
+10.Based on your result, which settings (location/medicine) would you recommend for use in game play based on the models? Why?
+\vspace{0.5in}
+
+`r colorize("I would recommend location 1 and medicine blue as these two selections have the highest average effectiveness.  ", "blue")`
+ 
+

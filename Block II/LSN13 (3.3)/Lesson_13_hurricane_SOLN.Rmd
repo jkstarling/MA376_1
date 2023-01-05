@@ -1,0 +1,237 @@
+---
+title: "Lesson 13 - Hurricanes!"
+author: "LTC James K. Starling"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+```
+
+A study by Jung et al. (Proc. Natl. Acad. Sci. USA, 2014) looked at hurricane names and their perceived threat. They thought that if hurricanes had male names they would be perceived as more dangerous than if they had female names. In one part of the study, the participants were given a weather map showing a hurricane moving toward the area where they lived. Participants were told the name of the hurricane and then rated the riskiness of the hurricane on a seven-point scale, with 1 being “not at all” (risky) and 7 being “very risky.” 
+
+```{r message=FALSE, warning=FALSE}
+### Loading packages
+library(tidyverse)
+library(ggResidpanel)
+## Load data  
+
+hurrA <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/hurricanesA.txt',
+                      header = TRUE, stringsAsFactors = TRUE)
+hurrB <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/hurricanesB.txt',
+                      header = TRUE, stringsAsFactors = TRUE)
+
+# setwd('C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons_AY23-1/Block II/LSN13 (3.3)/')
+# hurrA <- read.table('hurricanesA.txt', header = TRUE, stringsAsFactors = TRUE)
+# hurrB <- read.table('hurricanesB.txt', header = TRUE, stringsAsFactors = TRUE)
+
+hurrA <- hurrA %>% mutate(Participant=as.factor(Participant))
+hurrB <- hurrB %>% mutate(ParticipantID=as.factor(ParticipantID))
+```
+
+(1): Start by brainstorming how you might design this study. What variables would you measure? What variables would you control? What would you randomize? Why?
+\vspace{0.5in}
+
+`r colorize("Use the riskiness rating of each hurricane as the response variable. We would make the descriptions of the hurricanes as similar as possible except for the type of name (male or female). We could randomly assign participants to the male name or the female name, allowing us to later potentially draw cause-and-effect conclusions.", "blue")`
+
+
+(2): The researchers decided to block on the participant. Explain what it means to “block on the participant” in this study. Why do you think they chose that blocking variable? How does that change your randomization plan?
+\vspace{0.5in}
+
+`r colorize("Blocking on participant means that each participant will rate both of the hurricanes (in random order). This accounts for the differences of each individual toward hurricane risk.", "blue")`
+
+
+**Suppose the researchers had two participants in their study. Blocking on participant and randomizing to two treatments is a matched pairs design as discussed in Section 2.1, and a special case of the randomized complete block designs discussed in Section 2.2. Suppose they carried out the matched pairs design for these two participants and obtained the following ratings.**
+
+|Participant| Hurricane Name |Rating from 1-7|
+|:---------:|:--------------:|:-------------:|
+|     1     |Arthur (Male)   |        3.5    |  
+|     1     |Bertha (Female) |        4      |  
+|     2     |Arthur (Male)   |        5      |  
+|     2     |Bertha (Female) |        4      |  
+
+(3): Based on this table, do male names tend to receive higher ratings than female names? Or, can you not judge such a main effect because there appears to be an interaction between participant and rating? How are you deciding?  
+\vspace{0.5in}
+
+`r colorize("We cannot judge that main effect because there appears to be an interaction between participant and rating as one participant rated the male hurricane as more dangerous and the other the female hurricane.", "blue")`
+
+
+**We can’t say too much from this study due to the very small sample size. In particular, one participant rated Hurricane Arthur as a larger threat, whereas the other participant picked Bertha as the larger threat. Why is this? Is this a trend? Or just random chance? Is there an interaction between Hurricane Name and Participant?**
+
+(4): A way to think of the limitation of this study is in terms of degrees of freedom. Can you fill in the table below? How many treatments are considered?
+
+|             Source            |    DF   |
+|:-----------------------------:|:-------:|
+|Hurricane Gender               |    1    |
+|Participant                    |    1    |
+|Hurricane gender x Participant |    1    |
+|Error                          |   ***   |  
+|Total                          |    3    |  
+
+`r colorize("The table can not be completed.  Because there are only three degrees of freedom total available in the study (4 − 1), all of the degrees of freedoms will be used up if an interaction between participant and hurricane name is included. Thus, there will be no way to estimate random error. The interaction effects and the Error are completely confounded. In Chapter 2, we simply assumed there was no interaction between the explanatory variable of interest (here male or female hurricane name) and the blocking variable (participant). But we see some evidence from even these four data values that these two participants are reacting differently to the hurricane names, and we would like to have enough information to test the statistical significance of this interaction.", "blue")`
+\vspace{0.5in}
+
+
+(5): How could you modify the study in order to test for a statistically significant interaction? Would adding more participants to the study help with this issue?
+\vspace{0.5in}
+
+`r colorize("You need more observations for each participant (to estimate “within person” variation), not more participants (though that could help too, but wouldn’t address the lack of degrees of freedom we have here). In other words, we want to give each participant more than two hurricane names.  ", "blue")`
+
+
+(6): If we didn't have replication, what type of models could we fit? 
+
+`r colorize("We could fit a single- or multiple-means model.", "blue")`
+\vspace{0.5in}
+
+
+
+(7): Well-designed experiments use random assignment. Where should random assignment be used when conducting this study?
+\vspace{0.5in}
+
+`r colorize("Randomly assign the order that the hurricanes are presented to each participant.", "blue")`
+
+**In this study, the researchers weren’t that interested in specific hurricane names, but rather the hurricane gender (male or female). Therefore, although it probably wouldn’t make sense to have the same participant rate the same name multiple times, they can rate the same hurricane name gender multiple times. These researchers had participants rate 10 different hurricane names selected from the official 2014 Atlantic Hurricane names, 5 of which were female names (Bertha, Dolly, Fay, Laura, and Hanna) and 5 of which were male names (Arthur, Cristobal, Omar, Kyle, and Marco). Next, we have five repeats for each participant–gender combination, allowing us to estimate the “within participant” variation separately from the between participant and between treatment variation. When you have more than one observation for each block-treatment combination, this is often called a generalized block design.**
+
+**The data in the `hurricanes`data set contain the perceived threat level rating given by two participants for each of the 10 hurricanes.**
+
+
+(8): Create an interaction plot using the `hurricanes` data set? What are the conclusions you can draw from this plot? Does there appear to be an interaction between name and participant?
+
+```{r}
+plot.data <- hurrA %>%                                        
+              group_by(Participant, HurrGender) %>% 
+              summarise(Mean = mean(Rating))
+
+plot.data %>% ggplot() + aes(x=as.factor(Participant), y = Mean, group=HurrGender, 
+                             color = HurrGender) + 
+              geom_line() + geom_point() + theme_classic()
+```
+
+`r colorize("Participant #1 rating the female hurricane as more serious but Participant #346 rating the male hurricane as more serious. This is a pretty large “interaction” and probably statistically significant though we do have a small sample size.", "blue")`
+
+
+(9): Create an interaction model and anova table for `rating`, using `HurrGender` and `Participant` as explanatory variables? (Hint: pay attention to the type of variables that you have in the data set.  Do any of the variables need to be changed to a factor?)
+\vspace{0.5in}
+
+```{r}
+contrasts(hurrA$Participant) = contr.sum
+contrasts(hurrA$HurrGender) = contr.sum
+
+interact.lm <- lm(Rating~Participant*HurrGender, data=hurrA)
+summary(interact.lm)
+anova(interact.lm) 
+```
+
+
+
+(10): Is the interaction statistically significant?
+\vspace{0.5in}
+
+`r colorize("With F = 20.61 and p-value 0.0003, this confirms the interaction seen in the graph was unlikely due to chance alone.", "blue")`
+
+
+**In the actual study, the researchers used 346 students from the University of Illinois at Urbana-Champaign—participating for course credit (age 19-25 years, 208 females)—each of whom rated each of the 10 hurricane names (5 of each gender). The researchers examined several research questions but the hurricanesB file contains the results for the hurricane gender and hurricane age variables.**
+
+(Use the `hurrB` dataframe that was read in above.)
+
+(11): Using the `hurricanesB` dataset create an interaction plot for `HurricaneGender` and `HurricaneAge`. Is there much evidence of a gender effect? Is there an age effect? An interaction? Describe the nature of the interaction that is present.
+\vspace{0.5in}
+
+```{r}
+plot.data = hurrB %>%                                        
+              group_by(HurricaneGender, HurricaneAge) %>% 
+              summarise(Mean = mean(Rating))
+
+plot.data %>% ggplot() + aes(x=HurricaneGender, y = Mean, group=HurricaneAge, 
+                             color = HurricaneAge) + 
+              geom_line() + geom_point() + theme_classic()
+```
+
+`r colorize("There appear to be slight effects of gender (males names rated as more serious) and age (younger names rated as more serious) as evidenced by the slight difference in the means of each of the groups. There is weak evidence of an interaction, with the gender effect being larger for the young names compared to the old names.", "blue")`
+
+
+
+(12): Create a two-variable model and anova table, including the interaction between `HurricaneGender` and `HurricaneAge`, and adjusting for the blocking variable (`ParticipantID`). 
+How much variation in ratings of hurricanes is explained in this model? 
+Explain where each degree of freedom comes from. 
+\vspace{0.5in}
+
+```{r}
+library(car)
+
+contrasts(hurrB$HurricaneGender) = contr.sum
+contrasts(hurrB$HurricaneAge) = contr.sum
+contrasts(hurrB$ParticipantID) = contr.sum
+
+
+factorial.lm <- hurrB %>% lm(Rating ~ HurricaneGender * HurricaneAge + ParticipantID, data = .)
+### summary(factorial.lm)  ## don't un-comment.
+factorial.anv <- anova(factorial.lm)
+factorial.anv
+rsq <- sum(factorial.anv$`Sum Sq`[2:5]) / sum(factorial.anv$`Sum Sq`[2:6])
+rsq
+```
+
+
+(13): Examine the residual plot for this model. Do you consider the validity conditions for the theory-based F-tests to be met? Include supporting evidence for your conclusions.
+
+```{r}
+resid_panel(factorial.lm, plots = c("hist"))
+hurrB %>% group_by(HurricaneGender, HurricaneAge) %>% 
+  summarise(sd(Rating))
+```
+
+`r colorize("Yes.  The residuals of the model appear to be normally distributed and the sd of the treatments are very similar.", "blue")`
+
+\vspace{0.5in}
+
+(14): State the null and alternative hypotheses for the interaction. What do you conclude? Is this consistent with your interaction plot?
+
+`r colorize("$H_0:$ There is no interaction between gender and age of a hurricane name. $H_a:$  There is an interaction between the gender and age of a hurricane name. We fail to reject the null hypothesis due to the unconvincing Fstatistic of 1.96 and pvalue of 0.162 > 0.05.", "blue")`
+
+\vspace{0.5in}
+
+(15): Because the interaction is not statistically significant, we will summarize the main effects. Rerun the analysis without including the interaction. 
+
+State the null and alternative hypotheses for the hurricane gender effect What do you conclude? Is this consistent with your interaction plot?
+
+```{r}
+gender.lm <- hurrB %>% lm(Rating ~ HurricaneGender + HurricaneAge + ParticipantID, data = .)
+
+### summary(gender.lm)  ## don't un-comment.
+gender.anv <- Anova(gender.lm, type = 3)
+gender.anv
+```
+
+`r colorize("$H_0:$ There is no association between the gender of a hurricane name and its perceived danger rating, after adjusting for age of hurricane name; $H_a:$ There is an association between the gender of a hurricane name and its perceived danger rating, after adjusting for age of hurricane name. Now the gender of the hurricane name does have a significant effect of the perceived data, F = 9.69, pvalue = 0.002.", "blue")`
+
+
+\vspace{0.5in}
+
+(16): Does this analysis support the researchers’ conjecture that male names would be perceived as more dangerous? (Hint: After adjusting?) Write a short summary of your conclusions, being sure to address significance, estimation, causation, and generalizability.
+
+
+```{r}
+head(coef(gender.lm))
+head(confint(gender.lm))
+```
+
+
+`r colorize("Yes, after adjusting for participant, there is strong evidence that male hurricanes are perceived as more dangerous. (This study found that this causes problems because people don’t take as many precautionary steps for hurricanes with female names because they aren’t perceived to be as much of a threat.) Because random assignment was employed in the rating order of the hurricanes it can be inferred that the gender of the hurricane name did cause the difference in rating. The population mean rating of male named hurricanes is believed to be 0.0306 to 0.135 points higher than that of female named hurricanes at the level of 95% confidence.", "blue")`
+
+\vspace{0.5in}
+
+
+(17): Is there evidence that blocking on participant was worthwhile?  Explain how you are deciding and what this means in context. 
+
+`r colorize("Yes, blocking on participant accounted for much of the person to person variation in rating the danger of each hurricane. Accounting for these person to person differences in how they rate hurricane danger, we were better able to compare the effect of the type of hurricane name on the adjusted ratings.", "blue")`

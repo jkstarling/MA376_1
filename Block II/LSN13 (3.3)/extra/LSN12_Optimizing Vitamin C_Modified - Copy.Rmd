@@ -1,0 +1,219 @@
+---
+title: "Lesson 12 Adapated from Example 3.3: Optimizing Vitamin C"
+author: "updated by JKS"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, message=FALSE, echo=TRUE, include=FALSE, warning=FALSE}
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color, 
+      x)
+  } else x
+}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<br>
+
+#### Review
+What types of design are we learning in this section? `r colorize("*Generalized block designs/within block designs.*", "blue")`
+
+#### Background
+Ok. In this example student researchers explored factors that could impact the amount of Vitamin C in orange juice (Billquist, Goodman, & Ludwig, 2013). In particular, they wanted to know whether storing the orange juice at different temperatures would impact Vitamin C levels. They randomly assigned one glass with 75 mL of juice from three brands to each of the two treatments (refrigerator temperature or room temperature). What types of design is this? `r colorize("*The randomized complete block designs we saw in Lesson 12 with the riveting example of the strawberries.*", "blue")`
+
+```{r message=FALSE, echo=TRUE, include=FALSE, warning=FALSE, echo = TRUE}
+# Load package and data
+library(tidyverse)
+
+setwd('C:/Users/james.starling/OneDrive - West Point/Teaching/MA376/JimsLessons_AY23-1/Block II/LSN13 (3.3)/extra/')
+
+# OJ6 <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/OJ-n6.txt', header = TRUE, stringsAsFactors = TRUE)
+# OJ18 <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/OJ-n18.txt', header = TRUE, stringsAsFactors = TRUE)
+# OJ24 <- read.table('https://raw.githubusercontent.com/jkstarling/MA376/main/OJ-n24.txt', header = TRUE, stringsAsFactors = TRUE)
+
+OJ6 <- read.table('OJ-n6.txt', header = TRUE, stringsAsFactors = TRUE)
+OJ18 <- read.table('OJ-n18.txt', header = TRUE, stringsAsFactors = TRUE)
+OJ24 <- read.table('OJ-n24.txt', header = TRUE, stringsAsFactors = TRUE)
+
+View(OJ6) # n = 6
+
+# Tasks: 
+# a) Confirm that data are in long format
+# b) Verify that categorical variables are 'factors'. If not, change to factors.
+# OJ1 <- OJ1 %>% mutate(Brand=as.factor(Brand), Temp=as.factor(Temp))
+```
+
+
+Conduct ANOVA
+```{r}
+oj.lm6 <- lm(VitC ~ Brand + Temp, data = OJ6)
+anova(oj.lm6)
+summary(oj.lm6)
+
+oj.lm18 <- lm(VitC1000 ~ Brand * Temp, data = OJ18)
+anova(oj.lm18)
+summary(oj.lm18)
+
+oj.lm24 <- lm(VitC1000 ~ Brand * Temp, data = OJ24)
+anova(oj.lm24)
+summary(oj.lm24)
+```
+
+Interaction Plots
+
+```{r}
+OJ6 %>% ggplot(aes(x=Brand, y=VitC, group=Temp, color=Temp)) +
+  geom_point() +
+  geom_line() + labs(title = "Vitamin C by Brand and Temp (OJ6)", y="Vit C")
+
+OJ18.int <- OJ18 %>% group_by(Brand, Temp) %>% summarise(mn=mean(VitC1000))
+p18 <- OJ18.int %>% ggplot(aes(x=Brand, y=mn, group=Temp, color=Temp)) +
+  geom_point() +
+  geom_line() + labs(title = "Vitamin C by Brand and Temp (OJ18)", y="Vit C")
+p18 + geom_point(aes(x=Brand, y=VitC1000, group=Temp, color=Temp),data = OJ18)
+
+
+OJ24.int <- OJ24 %>% group_by(Brand, Temp) %>% summarise(mn=mean(VitC1000))
+p24 <- OJ24.int %>% ggplot(aes(x=Brand, y=mn, group=Temp, color=Temp)) +
+  geom_point() +
+  geom_line()
+p24 + geom_point(aes(x=Brand, y=VitC1000, group=Temp, color=Temp),data = OJ24) + labs(title = "Vitamin C by Brand and Temp (OJ24)", y="Vit C")
+
+
+p24 <- OJ24.int %>% ggplot(aes(x=Temp, y=mn, group=Brand, color=Brand)) +
+  geom_point() +
+  geom_line()
+p24 + geom_point(aes(x=Temp, y=VitC1000, group=Brand, color=Brand),data = OJ24) + labs(title = "Vitamin C by Brand and Temp (OJ24)", y="Vit C")
+
+OJ24.wat <- OJ24 %>% group_by(Brand, Water) %>% summarise(mn=mean(VitC1000))
+p24w <- OJ24.wat %>% ggplot(aes(x=Brand, y=mn, group=Water, color=Water)) +
+  geom_point() +
+  geom_line()
+p24w + geom_point(aes(x=Brand, y=VitC1000, group=Water, color=Water),data = OJ24) + labs(title = "Vitamin C by Brand and Temp (OJ24)", y="Vit C")
+
+```
+
+
+
+##### 1) 
+Ok. The researchers identified brand of orange juice (3 types) as a blocking variable. What are the characteristics of a blocking variable? `r colorize("*Go to PPT 3.*", "red")` So the brand is just nuisance variable that will probably account for a lot of variation but! we aren't studying juice brands.
+
+At this point the authors fit the model for the randomized complete block design using effects encoding.`r colorize("*ASK THEM ABOUT THE HYPOTHESIS FOR THE MODEL WE ARE BUILDING. Make sure that they know how to make conclusions ABOUT THE MODEL based on the model information section in R first. REMEMBER TO STRESS THAT WE ASKING OURSELVES IS THERE A BENEFIT TO HAVING THE EXPLANATORY VARIABLES IN THE MODEL AND WHICH OF THE VARIABLES THEMSELVES ARE SIGNIFICANT.*", "red")`
+There is code on how to build the two-variable anova. There is also code on how to make the interaction plot.
+
+```{r RCBD Two-variable model without interaction (Effect coding)}
+# Create contrasts
+contrasts(OJ1$Brand) = contr.sum
+contrasts(OJ1$Temp) = contr.sum
+levels(OJ1$Brand)
+levels(OJ1$Temp)
+
+OJ1.lm <- lm(VitC~Brand+Temp, data=OJ1)
+summary(OJ1.lm)
+anova(OJ1.lm) 
+```
+
+The authors also fit a two-way anova with an interaction. What does it mean for there to be an interaction between temperature and brand? What are the hypotheses for the interaction model?  `r colorize("*We have reason to believe that the relationship between temperature and vitamin C is modified by brand.*", "blue")` `r colorize("*Go to R.*", "red")`
+
+```{r RCBD Interaction model (Effect coding)}
+OJ1.interact.lm <- lm(VitC~Brand*Temp, data=OJ1)
+summary(OJ1.interact.lm)
+anova(OJ1.interact.lm) 
+```
+ 
+Notice that there is only one observation for each treatment with each brand, the interaction and the error are completely confounded - which is why R is screaming at us. We can only carry out statistical tests of the effect of the explanatory variable in a randomized complete block design if we are willing to assume there is no interaction between the block and explanatory variable.
+ 
+##### 2)
+The authors then ask- well- how do we modify this study design to test for a statistically significant interaction if we have reason to believe that the relationship between temperature and vitamin C is modified by the brand of orange juice? What do you think? What do we do? . `r colorize("*Adding more observations would help! In other words they need replication of each treatment within each block*", "blue")`
+
+ `r colorize("*Go to PPT 4.*", "red")`
+ 
+This type of study design that will allow us to do this is known as a generalized block design. `r colorize("*Go to PPT 5 then Show Diagrams 1 and 2 on white board.*", "red")`.
+
+```{r GBD Interaction model (Effect coding)}
+# OJ2 <- read.table('C:/Users/annyclaude.joseph/Desktop/MA376/OJ-n18.txt', header=T)
+# View(OJ2) # n = 18
+
+OJ2 <- OJ18
+
+# Tasks: 
+# a) Confirm that data are in long format
+# b) Verify that categorical variables are 'factors'. If not, change to factors.
+OJ2 <- OJ2 %>% mutate(Brand=as.factor(Brand),Temp=as.factor(Temp))
+
+# Figure 3.3.8: Interaction plot
+OJ2 %>% ggplot(aes(x=Brand, y=VitC1000, group=Temp, color=Temp))+ geom_line()
+
+# Create contrasts
+contrasts(OJ2$Brand) = contr.sum
+contrasts(OJ2$Temp) = contr.sum
+levels(OJ2$Brand)
+levels(OJ2$Temp)
+
+# Interaction Model
+OJ2.interact.lm <- lm(VitC1000~Brand*Temp, data=OJ2)
+summary(OJ2.interact.lm)
+anova(OJ2.interact.lm) 
+```
+
+`r colorize("*ASK THEM ABOUT THE HYPOTHESIS FOR THE MODEL WE ARE BUILDING. SPEND TIME ON THE RESULTS FROM THE ANOVA. REMIND THEM THAT WE ONLY WANT TO INTERPRET THE INTERACTION AND NOT THE MAIN EFFECTS. BE SURE TO ASK THEM HOW THEY WOULD DECIDE ON WHICH MODEL IS PREFERRED.*", "red")`.
+
+##### 3)
+Suppose there was a second explanatory variable, type of water (distilled/tap). Each glass of orange juice can be made with either distilled or tap water. The researchers try yet another type of design, the within block factorial design. What are the characteristics of this design?
+ `r colorize("*We are assuming that each block contains all combinations of treatments*", "blue")`
+
+This means, we have temperature and the type of water as explanatory variables, with brand as a blocking variable (nuisance variable- we aren't studying juice brands). Whe can carry out a 2x2 factorial design of our explanatory variables but, within each block, i.e. four treatments within each of the three blocks. `r colorize("*Show Diagram 3 on white board.*", "red")` 
+
+Let's look at the partial anova table `r colorize("*Go to PPT6.*", "red")`. Notice  that the authors fit a model in which they assume that there is no interaction between the treatments (water-temperature combinations) and brand the blocking variable. This may not be an appropriate assumption.
+
+##### 4)
+We can also do replications within this type of design. That is- a replicated within block factorial design. `r colorize("*Show Diagram 4 on whiteboard.*", "red")` 
+
+A key advantage of replication is that it allows us to test the statistical significance of interactions with the blocking variable rather than having to assume they don't exist!  
+
+```{r RWBFD (Effect coding)}
+# OJ3 <- read.table('C:/Users/annyclaude.joseph/Desktop/MA376/OJ-n24.txt', header=T)
+# View(OJ3)   # n = 24
+OJ3 <- OJ24
+# Tasks: 
+# a) Confirm that data are in long format
+# b) Verify that categorical variables are 'factors'. If not, change to factors.
+OJ3 <- OJ3 %>% mutate(Brand=as.factor(Brand), Temp=as.factor(Temp), Water=as.factor(Water))
+
+# Create contrasts
+contrasts(OJ3$Brand) = contr.sum
+contrasts(OJ3$Temp) = contr.sum
+contrasts(OJ3$Water) = contr.sum
+levels(OJ3$Brand)
+levels(OJ3$Temp)
+levels(OJ3$Water)
+
+# Figure 3.3.9: Three-way interaction model for the replicated within-block
+# factorial design.
+OJ3.interact.lm <- lm(VitC1000~Brand +Temp*Water, data=OJ3)
+summary(OJ3.interact.lm)
+anova(OJ3.interact.lm)
+
+# Figure 3.3.10: Interaction plots between brand and temperature for each of the three brands
+OJ3 %>% ggplot(aes(x=Temp,y=predict(OJ3.interact.lm),group=Water, color=Water))+
+  geom_line()+
+  facet_wrap(vars(Brand))
+
+# What happens if we don't add three-way interaction?
+modified_interact.lm <- lm(VitC1000~Brand+Temp+Water+
+               Brand:Temp+
+               Water:Brand+
+               Water:Temp, data=OJ3)
+summary(modified_interact.lm)
+anova(modified_interact.lm) 
+```
+
+Key Idea for this lesson: Block what you can. Randomize what you can’t. Replicate as much as possible. 
+
+#### References
+Nathan Tintle et al.(2019). Intermediate Statistical Investigations for U.S. Military Academy at West Point.

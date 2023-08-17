@@ -24,7 +24,7 @@ grad <- read_csv("https://raw.githubusercontent.com/jkstarling/MA376/main/Berkel
 grad <- read_csv("Berkeley.csv")
 ```
 
-### Explore the Berkeley Data set
+### Explore the Berkeley Data set  
 
 Let's take a look at the data:
 
